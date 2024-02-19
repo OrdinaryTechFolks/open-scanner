@@ -1,3 +1,4 @@
+import 'package:bgm_frontend/process_image.dart';
 import 'package:bgm_frontend/screen/display_picture_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -85,6 +86,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
             if (!mounted) return;
 
+            print("opencv version:${opencvVersion()}");
             // If the picture was taken, display it on a new screen.
             await Navigator.of(context).push(
               MaterialPageRoute(
