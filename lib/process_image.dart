@@ -1,5 +1,6 @@
 import 'dart:ffi' as ffi;
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 
 // C function signatures
@@ -28,4 +29,40 @@ String opencvVersion() {
 
 void processImage(String inputPath, String outputPath) {
   _processImage(inputPath.toNativeUtf8(), outputPath.toNativeUtf8());
+}
+
+final class Image extends ffi.Struct {
+  @ffi.Int32()
+  external int width;
+
+  @ffi.Int32()
+  external int height;
+
+  external ffi.Pointer<ffi.Uint8> data;
+
+  Uint8List getData() {
+    return data.asTypedList(width * height);
+  } 
+}
+
+typedef _TransformFunc = Image Function(ffi.Pointer<Image>);
+final _TransformFunc _transform = _lib.lookupFunction<_TransformFunc, _TransformFunc>('transform');
+
+Image transform(int width, int height, Uint8List data) {
+  ffi.Pointer<Image> src = calloc<Image>();
+  src.ref.width = width;
+  src.ref.height = height;
+  src.ref.data = data.toUint8Pointer();
+
+  return _transform(src);
+}
+
+extension Uint8ListToUint8Pointer on Uint8List {
+  ffi.Pointer<ffi.Uint8> toUint8Pointer() {
+    final ptr = malloc.allocate<ffi.Uint8>(ffi.sizeOf<ffi.Uint8>() * length);
+    for (var i = 0; i < length; i++) {
+      ptr.elementAt(i).value = this[i];
+    }
+    return ptr;
+  }
 }

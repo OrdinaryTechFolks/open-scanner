@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:bgm_frontend/process_image.dart';
 import 'package:bgm_frontend/screen/display_picture_screen.dart';
 import 'package:camera/camera.dart';
@@ -87,6 +89,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             if (!mounted) return;
 
             print("opencv version:${opencvVersion()}");
+
+            var tImg = transform(2, 2, Uint8List.fromList([5, 9, 255, 0]));
+            print("transform:${tImg.width} ${tImg.height} ${tImg.getData()}");
             // If the picture was taken, display it on a new screen.
             await Navigator.of(context).push(
               MaterialPageRoute(
