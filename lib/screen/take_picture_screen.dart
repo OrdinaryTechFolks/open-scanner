@@ -1,8 +1,11 @@
-import 'dart:typed_data';
+import 'dart:async';
+import 'dart:math';
+import 'dart:ui' as ui;
 
-import 'package:bgm_frontend/process_image.dart';
+import 'package:bgm_frontend/process_image.dart' as pi;
 import 'package:bgm_frontend/screen/display_picture_screen.dart';
 import 'package:camera/camera.dart';
+import 'package:either_dart/either.dart';
 import 'package:flutter/material.dart';
 
 class TakePictureScreen extends StatefulWidget {
@@ -44,6 +47,23 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     super.dispose();
   }
 
+  Future<Either<pi.Image, Error>>  getTransformedImage(pi.Image src, List<Point<double>> srcCorners) async  {
+    var tImg = pi.transform(src, srcCorners);
+
+    Completer<ui.Image?> decodeRes = Completer();
+    ui.decodeImageFromPixels(tImg.data, tImg.width, tImg.height, ui.PixelFormat.rgba8888, (res) {
+      decodeRes.complete(res);
+    });
+    var image = await decodeRes.future;
+    if (image == null) return Right(FlutterError("Decoded image return null"));
+
+    var data = await image.toByteData(format: ui.ImageByteFormat.png);
+    if (data == null) return Right(FlutterError("Converted byte return null"));
+    
+    tImg.data = data.buffer.asUint8List();
+    return Left(tImg); 
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,21 +102,31 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             // where it was saved.
             await _controller.setFocusMode(FocusMode.locked);
             await _controller.setExposureMode(ExposureMode.locked);
-            final image = await _controller.takePicture();
+            final imageFile = await _controller.takePicture();
             await _controller.setFocusMode(FocusMode.auto);
             await _controller.setExposureMode(ExposureMode.auto);
-
             if (!mounted) return;
 
-            print("opencv version:${opencvVersion()}");
+            final image = await decodeImageFromList(await imageFile.readAsBytes());
+            final imageData = (await image.toByteData())?.buffer.asUint8List();
+            if (imageData == null) return;
 
-            var tImg = transform(2, 2, Uint8List.fromList([5, 9, 255, 0]));
-            print("transform:${tImg.width} ${tImg.height} ${tImg.getData()}");
+            final srcImg = pi.Image(image.width, image.height, 4, imageData);
+            
+            const double width = 360;
+            const double height = 640;
+
+            const List<Point<double>> srsCorners = [Point(0, 0+100), Point(width + 200, 0 + 100), Point(0 + 100, height + 100), Point(width + 100, height + 100)]; 
+            final tRes = await getTransformedImage(srcImg, srsCorners);
+            if (tRes.isRight) return print(tRes.right.toString());
+
+            print("image data: $imageData");
+            print("opencv version:${pi.opencvVersion()}");
             // If the picture was taken, display it on a new screen.
             await Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (context) => DisplayPictureScreen(
-                  imagePath: image.path,
+                  image: tRes.left,
                 ),
               ),
             );

@@ -7,25 +7,30 @@ struct Image
 {
     int width;
     int height;
+    int channels;
     uint8_t *data;
 };
 
-extern "C" {
+extern "C"
+{
     // Attributes to prevent 'unused' function from being removed and to make it visible
     __attribute__((visibility("default"))) __attribute__((used))
-    Image transform(Image *src) {
-        std::cout << src->width;
-        std::cout << src->height;
-        std::cout << src->data;
-        std::cout << *src->data;
+    Image
+    transform(Image *src, cv::Point2f *srcCorners, cv::Size2f *destSize)
+    {
+        auto srcMat = cv::Mat(src->height, src->width, CV_8UC4, src->data);
+        cv::Mat destMat;
 
-        struct Image dest; 
-        // dest.width = 2;
-        dest.width = src->width;
-        // dest.height = 3;
-        dest.height = src->height;
-        // dest.data = new uint8_t[6]{2, 5, 32, 3, 5, 8};
-        dest.data = src->data;
+        cv::Point2f destCorners[4] = {cv::Point2f{0, 0}, cv::Point2f{destSize->width, 0}, cv::Point2f{0, destSize->height}, cv::Point2f(destSize->width, destSize->height)};
+        auto perspectiveMat = cv::getPerspectiveTransform(srcCorners, destCorners);
+
+        cv::warpPerspective(srcMat, destMat, perspectiveMat, *destSize, cv::INTER_LINEAR);
+
+        struct Image dest;
+        dest.width = destMat.size().width;
+        dest.height = destMat.size().height;
+        dest.channels = destMat.channels();
+        dest.data = (uint8_t *)destMat.data;
 
         return dest;
     }
