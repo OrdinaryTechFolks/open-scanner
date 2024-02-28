@@ -1,7 +1,7 @@
 import 'package:bgm_frontend/component/crop_tool_corner.dart';
 import 'package:bgm_frontend/component/crop_tool_plane.dart';
-import 'package:bgm_frontend/view_model/crop_tool.dart';
-import 'package:bgm_frontend/view_model/crop_tool_corner.dart';
+import 'package:bgm_frontend/component/crop_tool_vm.dart';
+import 'package:bgm_frontend/component/crop_tool_corner_vm.dart';
 import 'package:flutter/material.dart';
 
 class CropTool extends StatelessWidget {

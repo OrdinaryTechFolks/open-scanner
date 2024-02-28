@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:ui' as ui;
 
-import 'package:bgm_frontend/process_image.dart' as pi;
+import 'package:bgm_frontend/domain/domain.image.dart';
+import 'package:bgm_frontend/repo/opencv/repo.opencv.methods.dart';
 import 'package:bgm_frontend/screen/display_picture_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:either_dart/either.dart';
@@ -12,9 +13,11 @@ class TakePictureScreen extends StatefulWidget {
   const TakePictureScreen({
     super.key,
     required this.camera,
+    required this.openCVRepo,
   });
 
   final CameraDescription camera;
+  final OpenCVRepo openCVRepo;
 
   @override
   TakePictureScreenState createState() => TakePictureScreenState();
@@ -47,11 +50,11 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     super.dispose();
   }
 
-  Future<Either<pi.Image, Error>>  getTransformedImage(pi.Image src, List<Point<double>> srcCorners) async  {
-    var tImg = pi.transform(src, srcCorners);
+  Future<Either<ImageDomain, Error>>  getTransformedImage(ImageDomain src, List<Point<double>> srcCorners) async  {
+    var tImg = widget.openCVRepo.transform(src, srcCorners);
 
     Completer<ui.Image?> decodeRes = Completer();
-    ui.decodeImageFromPixels(tImg.data, tImg.width, tImg.height, ui.PixelFormat.rgba8888, (res) {
+    ui.decodeImageFromPixels(tImg.data, tImg.size.width.toInt(), tImg.size.height.toInt(), ui.PixelFormat.rgba8888, (res) {
       decodeRes.complete(res);
     });
     var image = await decodeRes.future;
@@ -111,7 +114,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             final imageData = (await image.toByteData())?.buffer.asUint8List();
             if (imageData == null) return;
 
-            final srcImg = pi.Image(image.width, image.height, 4, imageData);
+            final srcImg = ImageDomain(ui.Size(image.width.toDouble(), image.height.toDouble()), 4, imageData);
             
             const double width = 360;
             const double height = 640;
@@ -120,8 +123,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             final tRes = await getTransformedImage(srcImg, srsCorners);
             if (tRes.isRight) return print(tRes.right.toString());
 
-            print("image data: $imageData");
-            print("opencv version:${pi.opencvVersion()}");
+            print("opencv version:${widget.openCVRepo.version()}");
             // If the picture was taken, display it on a new screen.
             await Navigator.of(context).push(
               MaterialPageRoute(

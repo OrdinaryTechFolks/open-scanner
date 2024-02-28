@@ -1,5 +1,5 @@
 
-import 'package:bgm_frontend/view_model/crop_tool.dart';
+import 'package:bgm_frontend/component/crop_tool_vm.dart';
 import 'package:flutter/material.dart';
 
 class CropToolPlane extends StatefulWidget {

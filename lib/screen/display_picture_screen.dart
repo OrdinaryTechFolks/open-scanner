@@ -1,13 +1,13 @@
 import 'package:bgm_frontend/component/crop_tool.dart';
-import 'package:bgm_frontend/process_image.dart' as pi;
-import 'package:bgm_frontend/view_model/crop_tool.dart';
+import 'package:bgm_frontend/component/crop_tool_vm.dart';
+import 'package:bgm_frontend/domain/domain.image.dart';
 import 'package:flutter/material.dart';
 
 class DisplayPictureScreen extends StatefulWidget {
   final List<CropToolVM> cropToolModel = [
     CropToolVM(const Offset(100, 100))
   ];
-  final pi.Image image;
+  final ImageDomain image;
 
   DisplayPictureScreen({super.key, required this.image});
 

@@ -1,3 +1,4 @@
+import 'package:bgm_frontend/repo/opencv/repo.opencv.methods.dart';
 import 'package:bgm_frontend/screen/take_picture_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -7,11 +8,12 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final cameras = await availableCameras();
   final camera = cameras.firstWhere((camera) => camera.lensDirection == CameraLensDirection.back);
+  final openCVRepo = OpenCVRepo();
 
   runApp(MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData.dark(useMaterial3: true),
-      home: TakePictureScreen(camera: camera)
+      home: TakePictureScreen(camera: camera, openCVRepo: openCVRepo)
       // home:   const MyHomePage(title: 'Flutter Demo Home Page'),
       // routes: <String, WidgetBuilder>{
       //   "camera": (context) => TakePictureScreen(

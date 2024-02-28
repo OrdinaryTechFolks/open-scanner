@@ -13,7 +13,6 @@ struct Image
 
 extern "C"
 {
-    // Attributes to prevent 'unused' function from being removed and to make it visible
     __attribute__((visibility("default"))) __attribute__((used))
     Image
     transform(Image *src, cv::Point2f *srcCorners, cv::Size2f *destSize)
@@ -33,5 +32,10 @@ extern "C"
         dest.data = (uint8_t *)destMat.data;
 
         return dest;
+    }
+
+    __attribute__((visibility("default"))) __attribute__((used))
+    const char* version() {
+        return CV_VERSION;
     }
 }
