@@ -15,18 +15,19 @@ class CropToolCornerState extends State<CropToolCorner> {
   @override
   void initState() {
     super.initState();
-    widget.vm.vm.cornerNotifier.addListener(() => setState(() => {}));
+    widget.vm.listenCornerChanges(() => setState(() => {}));
   }
 
   @override
   Widget build(BuildContext context) {
+    final cornerPosition = widget.vm.getCornerPosition();
     return Positioned(
-      top: widget.vm.position.y - 15,
-      left: widget.vm.position.x - 15,
+      top: cornerPosition.y - 15,
+      left: cornerPosition.x - 15,
       child: GestureDetector(
         onPanUpdate: (details) {
           setState(() {
-            widget.vm.move(details.delta);
+            widget.vm.moveCorner(details.delta);
           });
         },
         child: Container(

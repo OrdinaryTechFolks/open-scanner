@@ -1,11 +1,11 @@
 
-import 'package:bgm_frontend/component/crop_tool_vm.dart';
+import 'package:bgm_frontend/component/crop_tool_plane_vm.dart';
 import 'package:flutter/material.dart';
 
 class CropToolPlane extends StatefulWidget {
-  final CropToolVM vm;
+  final CropToolPlaneVM vm;
 
-  const CropToolPlane({super.key, required this.vm});
+  const CropToolPlane({super.key,  required this.vm});
 
   @override
   CropToolPlaneState createState() => CropToolPlaneState();
@@ -15,7 +15,7 @@ class CropToolPlaneState extends State<CropToolPlane> {
   @override
   void initState() {
     super.initState();
-    widget.vm.cornerNotifier.addListener(() => setState(() => {}));
+    widget.vm.listenCornerChanges(() => setState(() => {}));
   }
 
   @override
@@ -23,7 +23,7 @@ class CropToolPlaneState extends State<CropToolPlane> {
     return GestureDetector(
       onPanUpdate: (details) {
         setState(() {
-          widget.vm.move(details.delta);
+          widget.vm.moveCropTool(details.delta);
         });
       },
       child: CustomPaint(
@@ -37,12 +37,13 @@ class CropToolPlaneState extends State<CropToolPlane> {
 class CropToolPlanePainter extends CustomPainter {
   late Path path;
 
-  CropToolPlanePainter(CropToolVM vm) {
+  CropToolPlanePainter(CropToolPlaneVM vm) {
+    final ct = vm.getCropTool();
     path = Path()
-      ..moveTo(vm.getCorner(0).x, vm.getCorner(0).y)
-      ..lineTo(vm.getCorner(1).x, vm.getCorner(1).y)
-      ..lineTo(vm.getCorner(3).x, vm.getCorner(3).y)
-      ..lineTo(vm.getCorner(2).x, vm.getCorner(2).y);
+      ..moveTo(ct.getCorner(0).x, ct.getCorner(0).y)
+      ..lineTo(ct.getCorner(1).x, ct.getCorner(1).y)
+      ..lineTo(ct.getCorner(3).x, ct.getCorner(3).y)
+      ..lineTo(ct.getCorner(2).x, ct.getCorner(2).y);
   }
 
   @override

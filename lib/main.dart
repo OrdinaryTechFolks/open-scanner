@@ -1,25 +1,40 @@
-import 'package:bgm_frontend/repo/opencv/repo.opencv.methods.dart';
-import 'package:bgm_frontend/screen/take_picture_screen.dart';
+import 'package:bgm_frontend/repo/opencv.dart';
+import 'package:bgm_frontend/screen/resources_create_capture_vm.dart';
+import 'package:bgm_frontend/screen/resources_create_edit.dart';
+import 'package:bgm_frontend/screen/resources_create_edit_vm.dart';
+import 'package:bgm_frontend/screen/resources_create_select.dart';
+import 'package:bgm_frontend/screen/resources_create_select_vm.dart';
+import 'package:bgm_frontend/screen/resources_list.dart';
+import 'package:bgm_frontend/screen/resources_create_capture.dart';
+import 'package:bgm_frontend/repo/resources.dart';
 import 'package:flutter/material.dart';
-
-import 'package:camera/camera.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final cameras = await availableCameras();
-  final camera = cameras.firstWhere((camera) => camera.lensDirection == CameraLensDirection.back);
   final openCVRepo = OpenCVRepo();
+  final resourcesRepo = ResourcesRepo();
+
+ final resourcesCreateCaptureVM = ResourcesCreateCaptureVM(resourcesRepo);
+ final resourcesCreateSelectVM = ResourcesCreateSelectVM(resourcesRepo);
 
   runApp(MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData.dark(useMaterial3: true),
-      home: TakePictureScreen(camera: camera, openCVRepo: openCVRepo)
-      // home:   const MyHomePage(title: 'Flutter Demo Home Page'),
-      // routes: <String, WidgetBuilder>{
-      //   "camera": (context) => TakePictureScreen(
-      //     camera: firstCamera,
-      //   )
-      // },
+      home: const ResourcesListScreen(),
+      onGenerateRoute: (settings) {
+        return MaterialPageRoute(builder: (context) {
+          final arguments = settings.arguments as Map<String, Object>? ?? {};
+
+          switch(settings.name) {
+            case "/resources/list": return const ResourcesListScreen();
+            case "/resources/create/capture": return ResourcesCreateCaptureScreen(vm:resourcesCreateCaptureVM);
+            case "/resources/create/select": return ResourcesCreateSelectScreen(vm: resourcesCreateSelectVM);
+            case "/resources/create/{id#int}/edit": 
+              return ResourcesCreateEditScreen(vm: ResourcesCreateEditVM(arguments["id"] as int, resourcesRepo, openCVRepo));
+          }
+          return const SizedBox.shrink();
+        }, settings: settings);
+      },
     ));
 }
 

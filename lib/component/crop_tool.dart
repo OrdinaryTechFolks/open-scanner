@@ -1,5 +1,6 @@
 import 'package:bgm_frontend/component/crop_tool_corner.dart';
 import 'package:bgm_frontend/component/crop_tool_plane.dart';
+import 'package:bgm_frontend/component/crop_tool_plane_vm.dart';
 import 'package:bgm_frontend/component/crop_tool_vm.dart';
 import 'package:bgm_frontend/component/crop_tool_corner_vm.dart';
 import 'package:flutter/material.dart';
@@ -13,12 +14,9 @@ class CropTool extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        ...vm.cornerPositions
-            .asMap()
-            .keys
-            .map((index) => CropToolCorner(vm: CropToolCornerVM(index, vm)))
-            .toList(),
-        CropToolPlane(vm: vm),
+        for (int i = 0; i < vm.getCornersLength(); i++) 
+          CropToolCorner(vm: CropToolCornerVM(vm.index, i, vm.repo)),
+        CropToolPlane(vm: CropToolPlaneVM(vm.index, vm.repo)),
       ],
     );
   }

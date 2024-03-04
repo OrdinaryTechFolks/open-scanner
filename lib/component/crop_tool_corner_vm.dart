@@ -1,19 +1,24 @@
 import 'dart:math';
 
-import 'package:bgm_frontend/component/crop_tool_vm.dart';
+import 'package:bgm_frontend/repo/resources.dart';
 import 'package:flutter/material.dart';
 
 class CropToolCornerVM {
+  late int ctIndex;
   late int index;
-  late CropToolVM vm;
+  late ResourcesRepo resourcesRepo;
 
-  CropToolCornerVM(this.index, this.vm);
+  CropToolCornerVM(this.ctIndex, this.index, this.resourcesRepo);
 
-  Point<double> get position {
-    return vm.getCorner(index);
+  Point<double> getCornerPosition() {
+    return resourcesRepo.cropTools[ctIndex].getCorner(index);
   }
 
-  void move(Offset delta) {
-    return vm.moveCorner(index, delta);
+  void moveCorner(Offset delta) {
+    return resourcesRepo.cropTools[ctIndex].moveCorner(index, delta);
+  }
+
+  listenCornerChanges(VoidCallback cb) {
+    return resourcesRepo.cropTools[ctIndex].cornerNotifier.addListener(cb);
   }
 }

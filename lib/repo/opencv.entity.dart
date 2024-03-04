@@ -3,7 +3,7 @@ import 'dart:ffi' as ffi;
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'package:bgm_frontend/domain/domain.image.dart';
+import 'package:bgm_frontend/domain/image.dart';
 import 'package:ffi/ffi.dart';
 
 final class CImage extends ffi.Struct {
