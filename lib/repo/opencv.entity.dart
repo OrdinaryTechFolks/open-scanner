@@ -43,12 +43,9 @@ extension ImageDomainExts on ImageDomain {
   ffi.Pointer<CImage> toCImage() {
     ffi.Pointer<CImage> cImage = calloc<CImage>();
     cImage.ref.width = size.width.toInt();
-    cImage.ref.height = size.width.toInt();
+    cImage.ref.height = size.height.toInt();
     cImage.ref.channels = channels;
-    // print("before length ${data.length}");
     cImage.ref.data = data.toUint8Pointer();
-    // print("data: $data");
-    // print("data: ${cImage.ref.width}");
     return cImage;
   }
 }

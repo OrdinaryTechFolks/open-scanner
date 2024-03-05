@@ -20,7 +20,7 @@ extern "C"
         auto srcMat = cv::Mat(src->height, src->width, CV_8UC4, src->data);
         cv::Mat destMat;
 
-        cv::Point2f destCorners[4] = {cv::Point2f{0, 0}, cv::Point2f{0, destSize->height - 1}, cv::Point2f(destSize->width - 1, destSize->height - 1), cv::Point2f{destSize->width - 1, 0}};
+        cv::Point2f destCorners[4] = {cv::Point2f{0, 0}, cv::Point2f{destSize->width, 0}, cv::Point2f{0, destSize->height}, cv::Point2f(destSize->width, destSize->height)};
         auto perspectiveMat = cv::getPerspectiveTransform(srcCorners, destCorners);
 
         cv::warpPerspective(srcMat, destMat, perspectiveMat, *destSize, cv::INTER_LINEAR);

@@ -33,11 +33,9 @@ class OpenCVRepo {
     final destHeight = max(heightA, heightB);
 
     final destSize = ui.Size(destWidth, destHeight);
-    final srcCornersReorder = [srcCorners[0], srcCorners[2], srcCorners[3], srcCorners[1]];
-    
     final destData = transformFFI(
       srcImage.toCImage(),
-      srcCornersReorder.toListPointer(),
+      srcCorners.toListPointer(),
       destSize.toCSize(),
     );
 
