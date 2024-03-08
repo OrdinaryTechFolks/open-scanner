@@ -37,7 +37,7 @@ class CropToolCornerState extends State<CropToolCorner> {
               shape: BoxShape.circle,
               color: const Color.fromRGBO(0, 255, 0, 0.5),
               border: Border.all(width: 1, color: Colors.red)),
-          child: Text(widget.vm.index.toString()),
+          child: Text(widget.vm.cornerIndex.toString()),
         ),
       ),
     );

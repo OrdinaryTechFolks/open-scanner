@@ -14,7 +14,7 @@ class CropToolPlaneVM {
   }
 
   void moveCropTool(Offset delta) {
-    return repo.cropTools[index].move(delta);
+    return repo.moveCropTool(index, delta);
   }
 
   CropToolDomain getCropTool() {

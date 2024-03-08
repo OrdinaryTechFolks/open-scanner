@@ -7,7 +7,7 @@ class ResourcesCreateSelectScreen extends StatefulWidget {
   final ResourcesCreateSelectVM vm;
 
   ResourcesCreateSelectScreen({super.key, required this.vm}) {
-    vm.addCropTool(const Offset(100, 100));
+    vm.addCropTool(const Offset(300, 300));
   }
 
   @override
@@ -22,38 +22,43 @@ class ResourcesCreateSelectScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Crop the image')),
-      body: Stack(
-        children: [
-          FutureBuilder(
-              future: widget.vm.getSelectedImage(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting ||
-                    snapshot.data == null) {
-                  return const CircularProgressIndicator();
-                }
+      body: InteractiveViewer(
+        constrained: false,
+        minScale: 0.01,
+        maxScale: 100,
+        boundaryMargin: const EdgeInsets.all(200),
+        child: Stack(
+          children: [
+            FutureBuilder(
+                future: widget.vm.getSelectedImage(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting ||
+                      snapshot.data == null) {
+                    return const CircularProgressIndicator();
+                  }
 
-                if (snapshot.data!.isLeft) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(snapshot.data!.left.toString())));
-                  return Container();
-                }
+                  if (snapshot.data!.isLeft) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(snapshot.data!.left.toString())));
+                    return Container();
+                  }
 
-                return Container(
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      fit: BoxFit.fitHeight,
-                      image: MemoryImage(snapshot.data!.right),
+                  return Container(
+                    width: 720,
+                    height: 1280,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        fit: BoxFit.none,
+                        image: MemoryImage(snapshot.data!.right),
+                      ),
                     ),
-                  ),
-                );
-              }),
-          Stack(
-            children: [
-              for (var i = 0; i < widget.vm.getCropToolLength(); i++)
-                CropTool(vm: CropToolVM(i, widget.vm.resourcesRepo))
-            ],
-          ),
-        ],
+                  );
+                }),
+            // Container(width: 100, height: 100, color: Colors.red),
+            for (var i = 0; i < widget.vm.getCropToolLength(); i++)
+              SizedBox(width: 720, height: 1280, child: CropTool(vm: CropToolVM(i, widget.vm.resourcesRepo)))
+          ],
+        ),
       ),
       bottomNavigationBar: BottomAppBar(
         child: SizedBox(
@@ -63,7 +68,9 @@ class ResourcesCreateSelectScreenState
               children: [
                 IconButton(
                     onPressed: () async {
-                      await Navigator.of(context).pushNamed("/resources/create/{id#int}/edit", arguments: {"id": 0});
+                      await Navigator.of(context).pushNamed(
+                          "/resources/create/{id#int}/edit",
+                          arguments: {"id": 0});
                     },
                     icon: const Icon(Icons.forward))
               ],

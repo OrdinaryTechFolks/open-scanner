@@ -1,11 +1,10 @@
-
 import 'package:bgm_frontend/component/crop_tool_plane_vm.dart';
 import 'package:flutter/material.dart';
 
 class CropToolPlane extends StatefulWidget {
   final CropToolPlaneVM vm;
 
-  const CropToolPlane({super.key,  required this.vm});
+  const CropToolPlane({super.key, required this.vm});
 
   @override
   CropToolPlaneState createState() => CropToolPlaneState();

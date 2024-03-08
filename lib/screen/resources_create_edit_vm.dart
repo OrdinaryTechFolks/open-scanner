@@ -16,4 +16,12 @@ class ResourcesCreateEditVM {
     final destImage = openCVRepo.transform(resourcesRepo.selectedImage, corners);
     return destImage.getEncodedList();
   }
+
+  int getNextIndex(){
+    final nextID = index + 1; 
+    if (index >= resourcesRepo.cropTools.length) {
+      return -1;
+    }
+    return nextID;
+  }
 }
