@@ -22,8 +22,8 @@ class CropToolCornerState extends State<CropToolCorner> {
   Widget build(BuildContext context) {
     final cornerPosition = widget.vm.getCornerPosition();
     return Positioned(
-      top: cornerPosition.y - 15,
-      left: cornerPosition.x - 15,
+      top: cornerPosition.y - 25,
+      left: cornerPosition.x - 25,
       child: GestureDetector(
         onPanUpdate: (details) {
           setState(() {
@@ -31,8 +31,8 @@ class CropToolCornerState extends State<CropToolCorner> {
           });
         },
         child: Container(
-          height: 30,
-          width: 30,
+          height: 50,
+          width: 50,
           decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color.fromRGBO(0, 255, 0, 0.5),

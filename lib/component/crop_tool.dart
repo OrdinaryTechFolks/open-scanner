@@ -14,9 +14,9 @@ class CropTool extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        CropToolPlane(vm: CropToolPlaneVM(vm.index, vm.repo)),
         for (int i = 0; i < vm.getCornersLength(); i++) 
           CropToolCorner(vm: CropToolCornerVM(vm.index, i, vm.repo)),
-        CropToolPlane(vm: CropToolPlaneVM(vm.index, vm.repo)),
       ],
     );
   }

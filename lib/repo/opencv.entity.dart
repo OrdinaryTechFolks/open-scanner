@@ -54,7 +54,7 @@ extension Uint8ListToUint8Pointer on Uint8List {
   ffi.Pointer<ffi.Uint8> toUint8Pointer() {
     final ptr = malloc.allocate<ffi.Uint8>(ffi.sizeOf<ffi.Uint8>() * length);
     for (var i = 0; i < length; i++) {
-      ptr.elementAt(i).value = this[i];
+      (ptr+i).value = this[i];
     }
     return ptr;
   }
@@ -73,8 +73,8 @@ extension DoublePointListToDoublePointPointer on List<Point<double>> {
   ffi.Pointer<CPoint> toListPointer() {
     final ptr = malloc.allocate<CPoint>(ffi.sizeOf<CPoint>() * length);
     for (var i = 0; i < length; i++) {
-      ptr.elementAt(i).ref.x = this[i].x;
-      ptr.elementAt(i).ref.y = this[i].y;
+      (ptr+i).ref.x = this[i].x;
+      (ptr+i).ref.y = this[i].y;
     }
     return ptr;
   }
