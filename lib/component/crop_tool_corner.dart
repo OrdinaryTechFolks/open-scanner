@@ -1,5 +1,5 @@
 
-import 'package:bgm_frontend/component/crop_tool_corner_vm.dart';
+import 'package:open_scanner/component/crop_tool_corner_vm.dart';
 import 'package:flutter/material.dart';
 
 class CropToolCorner extends StatefulWidget {

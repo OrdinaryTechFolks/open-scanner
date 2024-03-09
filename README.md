@@ -1,2 +1,2 @@
-# bgm-frontend
-Board Game Maker - Frontend
+# open-scanner
+Open Source Document Scanner

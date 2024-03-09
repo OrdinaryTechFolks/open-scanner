@@ -1,4 +1,4 @@
-import 'package:bgm_frontend/screen/resources_create_capture_vm.dart';
+import 'package:open_scanner/screen/resources_create_capture_vm.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 

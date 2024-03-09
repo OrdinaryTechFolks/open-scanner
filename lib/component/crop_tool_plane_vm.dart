@@ -1,7 +1,7 @@
 
 import 'dart:math';
 
-import 'package:bgm_frontend/repo/crop_tool.dart';
+import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:flutter/material.dart';
 
 class CropToolPlaneVM {

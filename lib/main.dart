@@ -1,13 +1,13 @@
-import 'package:bgm_frontend/repo/opencv.dart';
-import 'package:bgm_frontend/repo/resource.dart';
-import 'package:bgm_frontend/screen/resources_create_capture_vm.dart';
-import 'package:bgm_frontend/screen/resources_create_edit.dart';
-import 'package:bgm_frontend/screen/resources_create_edit_vm.dart';
-import 'package:bgm_frontend/screen/resources_create_select.dart';
-import 'package:bgm_frontend/screen/resources_create_select_vm.dart';
-import 'package:bgm_frontend/screen/resources_list.dart';
-import 'package:bgm_frontend/screen/resources_create_capture.dart';
-import 'package:bgm_frontend/repo/crop_tool.dart';
+import 'package:open_scanner/repo/opencv.dart';
+import 'package:open_scanner/repo/resource.dart';
+import 'package:open_scanner/screen/resources_create_capture_vm.dart';
+import 'package:open_scanner/screen/resources_create_edit.dart';
+import 'package:open_scanner/screen/resources_create_edit_vm.dart';
+import 'package:open_scanner/screen/resources_create_select.dart';
+import 'package:open_scanner/screen/resources_create_select_vm.dart';
+import 'package:open_scanner/screen/resources_list.dart';
+import 'package:open_scanner/screen/resources_create_capture.dart';
+import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:flutter/material.dart';
 
 Future<void> main() async {

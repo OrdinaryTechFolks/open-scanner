@@ -1,5 +1,5 @@
 
-import 'package:bgm_frontend/screen/resources_create_edit_vm.dart';
+import 'package:open_scanner/screen/resources_create_edit_vm.dart';
 import 'package:flutter/material.dart';
 
 

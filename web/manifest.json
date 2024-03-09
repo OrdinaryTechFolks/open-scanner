@@ -1,6 +1,6 @@
 {
-    "name": "bgm_frontend",
-    "short_name": "bgm_frontend",
+    "name": "open_scanner",
+    "short_name": "open_scanner",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

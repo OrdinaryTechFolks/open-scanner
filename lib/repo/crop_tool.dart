@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:bgm_frontend/domain/image.dart';
+import 'package:open_scanner/domain/image.dart';
 import 'package:flutter/material.dart';
 
 class CropToolRepo {

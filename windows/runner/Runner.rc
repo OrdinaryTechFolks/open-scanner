@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "bgm_frontend" "\0"
+            VALUE "FileDescription", "open_scanner" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "bgm_frontend" "\0"
+            VALUE "InternalName", "open_scanner" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2024 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "bgm_frontend.exe" "\0"
-            VALUE "ProductName", "bgm_frontend" "\0"
+            VALUE "OriginalFilename", "open_scanner.exe" "\0"
+            VALUE "ProductName", "open_scanner" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

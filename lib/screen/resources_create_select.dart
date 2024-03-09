@@ -1,6 +1,6 @@
-import 'package:bgm_frontend/component/crop_tool.dart';
-import 'package:bgm_frontend/component/crop_tool_vm.dart';
-import 'package:bgm_frontend/screen/resources_create_select_vm.dart';
+import 'package:open_scanner/component/crop_tool.dart';
+import 'package:open_scanner/component/crop_tool_vm.dart';
+import 'package:open_scanner/screen/resources_create_select_vm.dart';
 import 'package:flutter/material.dart';
 
 class ResourcesCreateSelectScreen extends StatefulWidget {

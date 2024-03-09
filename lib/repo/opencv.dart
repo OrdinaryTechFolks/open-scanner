@@ -2,8 +2,8 @@ import 'dart:ffi' as ffi;
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
-import 'package:bgm_frontend/domain/image.dart';
-import 'package:bgm_frontend/repo/opencv.entity.dart';
+import 'package:open_scanner/domain/image.dart';
+import 'package:open_scanner/repo/opencv.entity.dart';
 import 'package:ffi/ffi.dart';
 
 class OpenCVRepo {

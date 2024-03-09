@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:bgm_frontend/repo/crop_tool.dart';
-import 'package:bgm_frontend/repo/resource.dart';
+import 'package:open_scanner/repo/crop_tool.dart';
+import 'package:open_scanner/repo/resource.dart';
 import 'package:either_dart/either.dart';
 
 class ResourcesCreateSelectVM {

@@ -1,7 +1,7 @@
 
 import 'dart:typed_data';
 
-import 'package:bgm_frontend/domain/resource.dart';
+import 'package:open_scanner/domain/resource.dart';
 
 class ResourceRepo {
   List<ResourceDomain> entities = [];

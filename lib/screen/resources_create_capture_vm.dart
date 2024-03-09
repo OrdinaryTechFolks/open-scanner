@@ -1,5 +1,5 @@
-import 'package:bgm_frontend/domain/image.dart';
-import 'package:bgm_frontend/repo/crop_tool.dart';
+import 'package:open_scanner/domain/image.dart';
+import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/widgets.dart';
 

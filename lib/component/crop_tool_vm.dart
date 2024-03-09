@@ -1,5 +1,5 @@
 
-import 'package:bgm_frontend/repo/crop_tool.dart';
+import 'package:open_scanner/repo/crop_tool.dart';
 
 class CropToolVM {
   late int index;
