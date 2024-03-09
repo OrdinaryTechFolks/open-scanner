@@ -1,24 +1,29 @@
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:bgm_frontend/domain/crop_tool.dart';
-import 'package:bgm_frontend/repo/resources.dart';
+import 'package:bgm_frontend/repo/crop_tool.dart';
+import 'package:bgm_frontend/repo/resource.dart';
 import 'package:either_dart/either.dart';
 
 class ResourcesCreateSelectVM {
-  late ResourcesRepo resourcesRepo;
+  final CropToolRepo cropToolRepo;
+  final ResourceRepo resourceRepo;
 
-  ResourcesCreateSelectVM(this.resourcesRepo);
+  const ResourcesCreateSelectVM(this.cropToolRepo, this.resourceRepo);
 
-  addCropTool(Offset delta) {
-    return resourcesRepo.cropTools.add(CropToolDomain(delta));
+  void resetCropTool() {
+    cropToolRepo.resetCropTools();
+    resourceRepo.resetResources();
+    
+    cropToolRepo.addCropTool(const Offset(300, 300));
+    resourceRepo.addResource();
   }
 
   Future<Either<Error, Uint8List>> getSelectedImage() async {
-    return await resourcesRepo.selectedImage.getEncodedList();
+    return await cropToolRepo.selectedImage.getEncodedList();
   }
 
   int getCropToolLength() {
-    return resourcesRepo.cropTools.length;
+    return cropToolRepo.entities.length;
   }
 }

@@ -1,12 +1,12 @@
 import 'package:bgm_frontend/domain/image.dart';
-import 'package:bgm_frontend/repo/resources.dart';
+import 'package:bgm_frontend/repo/crop_tool.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/widgets.dart';
 
 class ResourcesCreateCaptureVM {
-  final ResourcesRepo resourcesRepo;
+  final CropToolRepo cropToolRepo;
 
-  ResourcesCreateCaptureVM(this.resourcesRepo);
+  ResourcesCreateCaptureVM(this.cropToolRepo);
 
   Future<CameraController> getCameraController() async {
     final cameras = await availableCameras();
@@ -37,7 +37,7 @@ class ResourcesCreateCaptureVM {
     final img = await ImageDomain.fromEncodedList(bytes);
     if (img == null) return FlutterError("Decoded image returns null");
 
-    resourcesRepo.selectedImage = img;
+    cropToolRepo.selectedImage = img;
     return null;
   }
 }

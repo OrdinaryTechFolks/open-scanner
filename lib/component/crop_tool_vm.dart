@@ -1,13 +1,13 @@
 
-import 'package:bgm_frontend/repo/resources.dart';
+import 'package:bgm_frontend/repo/crop_tool.dart';
 
 class CropToolVM {
   late int index;
-  late ResourcesRepo repo;
+  late CropToolRepo cropToolRepo;
 
-  CropToolVM(this.index, this.repo);
+  CropToolVM(this.index, this.cropToolRepo);
 
   int getCornersLength() {
-    return repo.cropTools[index].cornerPositions.length;
+    return cropToolRepo.getCropToolCornersLength(index);
   }
 }

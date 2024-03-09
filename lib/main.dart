@@ -1,4 +1,5 @@
 import 'package:bgm_frontend/repo/opencv.dart';
+import 'package:bgm_frontend/repo/resource.dart';
 import 'package:bgm_frontend/screen/resources_create_capture_vm.dart';
 import 'package:bgm_frontend/screen/resources_create_edit.dart';
 import 'package:bgm_frontend/screen/resources_create_edit_vm.dart';
@@ -6,16 +7,17 @@ import 'package:bgm_frontend/screen/resources_create_select.dart';
 import 'package:bgm_frontend/screen/resources_create_select_vm.dart';
 import 'package:bgm_frontend/screen/resources_list.dart';
 import 'package:bgm_frontend/screen/resources_create_capture.dart';
-import 'package:bgm_frontend/repo/resources.dart';
+import 'package:bgm_frontend/repo/crop_tool.dart';
 import 'package:flutter/material.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final openCVRepo = OpenCVRepo();
-  final resourcesRepo = ResourcesRepo();
+  final cropToolRepo = CropToolRepo();
+  final resourceRepo = ResourceRepo();
 
- final resourcesCreateCaptureVM = ResourcesCreateCaptureVM(resourcesRepo);
- final resourcesCreateSelectVM = ResourcesCreateSelectVM(resourcesRepo);
+ final resourcesCreateCaptureVM = ResourcesCreateCaptureVM(cropToolRepo);
+ final resourcesCreateSelectVM = ResourcesCreateSelectVM(cropToolRepo, resourceRepo);
 
   runApp(MaterialApp(
       title: 'Flutter Demo',
@@ -24,13 +26,13 @@ Future<void> main() async {
       onGenerateRoute: (settings) {
         return MaterialPageRoute(builder: (context) {
           final arguments = settings.arguments as Map<String, Object>? ?? {};
-
+        
           switch(settings.name) {
             case "/resources/list": return const ResourcesListScreen();
             case "/resources/create/capture": return ResourcesCreateCaptureScreen(vm:resourcesCreateCaptureVM);
             case "/resources/create/select": return ResourcesCreateSelectScreen(vm: resourcesCreateSelectVM);
             case "/resources/create/{id#int}/edit": 
-              return ResourcesCreateEditScreen(vm: ResourcesCreateEditVM(arguments["id"] as int, resourcesRepo, openCVRepo));
+              return ResourcesCreateEditScreen(vm: ResourcesCreateEditVM(arguments["id"] as int, cropToolRepo, openCVRepo, resourceRepo));
           }
           return const SizedBox.shrink();
         }, settings: settings);

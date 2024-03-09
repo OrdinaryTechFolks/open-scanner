@@ -37,12 +37,12 @@ class CropToolPlanePainter extends CustomPainter {
   late Path path;
 
   CropToolPlanePainter(CropToolPlaneVM vm) {
-    final ct = vm.getCropTool();
+    final corners = vm.getCropToolCorners();
     path = Path()
-      ..moveTo(ct.getCorner(0).x, ct.getCorner(0).y)
-      ..lineTo(ct.getCorner(1).x, ct.getCorner(1).y)
-      ..lineTo(ct.getCorner(3).x, ct.getCorner(3).y)
-      ..lineTo(ct.getCorner(2).x, ct.getCorner(2).y);
+      ..moveTo(corners[0].x, corners[0].y)
+      ..lineTo(corners[1].x, corners[1].y)
+      ..lineTo(corners[3].x, corners[3].y)
+      ..lineTo(corners[2].x, corners[2].y);
   }
 
   @override

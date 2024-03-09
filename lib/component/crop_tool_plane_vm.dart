@@ -1,23 +1,24 @@
 
-import 'package:bgm_frontend/domain/crop_tool.dart';
-import 'package:bgm_frontend/repo/resources.dart';
+import 'dart:math';
+
+import 'package:bgm_frontend/repo/crop_tool.dart';
 import 'package:flutter/material.dart';
 
 class CropToolPlaneVM {
   late int index;
-  late ResourcesRepo repo;
+  late CropToolRepo cropToolRepo;
 
-  CropToolPlaneVM(this.index, this.repo);
+  CropToolPlaneVM(this.index, this.cropToolRepo);
 
   listenCornerChanges(VoidCallback cb) {
-    return repo.cropTools[index].cornerNotifier.addListener(cb);
+    return cropToolRepo.listenCropTool(index, cb);
   }
 
   void moveCropTool(Offset delta) {
-    return repo.moveCropTool(index, delta);
+    return cropToolRepo.moveCropTool(index, delta);
   }
 
-  CropToolDomain getCropTool() {
-    return repo.cropTools[index];
+  List<Point<double>> getCropToolCorners() {
+    return cropToolRepo.getCropToolCorners(index);
   }
 }

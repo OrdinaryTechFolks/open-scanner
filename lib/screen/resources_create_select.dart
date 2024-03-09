@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 class ResourcesCreateSelectScreen extends StatefulWidget {
   final ResourcesCreateSelectVM vm;
 
-  ResourcesCreateSelectScreen({super.key, required this.vm}) {
-    vm.addCropTool(const Offset(300, 300));
+  ResourcesCreateSelectScreen({super.key, required this.vm}){
+    vm.resetCropTool();
   }
 
   @override
@@ -56,7 +56,7 @@ class ResourcesCreateSelectScreenState
                 }),
             // Container(width: 100, height: 100, color: Colors.red),
             for (var i = 0; i < widget.vm.getCropToolLength(); i++)
-              SizedBox(width: 720, height: 1280, child: CropTool(vm: CropToolVM(i, widget.vm.resourcesRepo)))
+              SizedBox(width: 720, height: 1280, child: CropTool(vm: CropToolVM(i, widget.vm.cropToolRepo)))
           ],
         ),
       ),

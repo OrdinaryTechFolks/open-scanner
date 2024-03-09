@@ -1,25 +1,40 @@
 import 'dart:typed_data';
 
 import 'package:bgm_frontend/repo/opencv.dart';
-import 'package:bgm_frontend/repo/resources.dart';
+import 'package:bgm_frontend/repo/crop_tool.dart';
+import 'package:bgm_frontend/repo/resource.dart';
 import 'package:either_dart/either.dart';
 
 class ResourcesCreateEditVM {
   final int index;
-  final ResourcesRepo resourcesRepo;
+  final CropToolRepo cropToolRepo;
   final OpenCVRepo openCVRepo;
+  final ResourceRepo resourceRepo;
 
-  ResourcesCreateEditVM(this.index, this.resourcesRepo, this.openCVRepo);
+  ResourcesCreateEditVM(
+      this.index, this.cropToolRepo, this.openCVRepo, this.resourceRepo);
 
   Future<Either<Error, Uint8List>> getTransformedImage() async {
-    final corners = resourcesRepo.cropTools[index].cornerPositions; 
-    final destImage = openCVRepo.transform(resourcesRepo.selectedImage, corners);
-    return destImage.getEncodedList();
+    final resource = resourceRepo.getResource(index);
+    if (resource.image != null) {
+      return Right(resource.image!);
+    }
+
+    final corners = cropToolRepo.getCropToolCorners(index);
+    final destImage = openCVRepo.transform(cropToolRepo.selectedImage, corners);
+
+    final encodeRes = await destImage.getEncodedList();
+    if (encodeRes.isLeft){
+      return Left(encodeRes.left);
+    }
+
+    resourceRepo.setResourceImage(index, encodeRes.right);
+    return Right(encodeRes.right);
   }
 
-  int getNextIndex(){
-    final nextID = index + 1; 
-    if (index >= resourcesRepo.cropTools.length) {
+  int getNextIndex() {
+    final nextID = index + 1;
+    if (index >= cropToolRepo.entities.length) {
       return -1;
     }
     return nextID;
