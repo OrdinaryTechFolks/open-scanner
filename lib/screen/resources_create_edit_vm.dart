@@ -16,17 +16,13 @@ class ResourcesCreateEditVM {
 
   Future<Either<Error, Uint8List>> getTransformedImage() async {
     final resource = resourceRepo.getResource(index);
-    if (resource.image != null) {
-      return Right(resource.image!);
-    }
+    if (resource.image != null) return Right(resource.image!);
 
     final corners = cropToolRepo.getCropToolCorners(index);
     final destImage = openCVRepo.transform(cropToolRepo.selectedImage, corners);
 
     final encodeRes = await destImage.getEncodedList();
-    if (encodeRes.isLeft){
-      return Left(encodeRes.left);
-    }
+    if (encodeRes.isLeft) return Left(encodeRes.left);
 
     resourceRepo.setResourceImage(index, encodeRes.right);
     return Right(encodeRes.right);
@@ -34,9 +30,19 @@ class ResourcesCreateEditVM {
 
   int getNextIndex() {
     final nextID = index + 1;
-    if (index >= cropToolRepo.entities.length) {
-      return -1;
-    }
+    if (nextID >= cropToolRepo.entities.length) return -1;
     return nextID;
+  }
+
+  String getResourceName(){
+    return resourceRepo.getResource(index).name;
+  }
+
+  void setResourceName(String name){
+    resourceRepo.setResourceName(index, name);
+  }
+
+  Future<void> saveResources() async {
+    await resourceRepo.saveResources();
   }
 }

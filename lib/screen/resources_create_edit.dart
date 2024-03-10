@@ -1,7 +1,5 @@
-
 import 'package:open_scanner/screen/resources_create_edit_vm.dart';
 import 'package:flutter/material.dart';
-
 
 class ResourcesCreateEditScreen extends StatefulWidget {
   final ResourcesCreateEditVM vm;
@@ -15,8 +13,23 @@ class ResourcesCreateEditScreen extends StatefulWidget {
 
 // A widget that displays the picture taken by the user.
 class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
+  final TextEditingController nameFieldCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    nameFieldCtrl.text = widget.vm.getResourceName();
+  }
+  
+  @override
+  void dispose() {
+    super.dispose();
+    nameFieldCtrl.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final nextID = widget.vm.getNextIndex();
     return Scaffold(
       appBar: AppBar(title: const Text('Edit the resource')),
       body: FutureBuilder(
@@ -33,26 +46,54 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
               return Container();
             }
 
-            return Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  fit: BoxFit.fitHeight,
-                  image: MemoryImage(snapshot.data!.right),
+            return Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        fit: BoxFit.fitHeight,
+                        image: MemoryImage(snapshot.data!.right),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                TextField(
+                  controller: nameFieldCtrl,
+                  onChanged: (value) => widget.vm.setResourceName(value),
+                  decoration: const InputDecoration(
+                    label: Text("Name"),
+                    border: OutlineInputBorder(),
+                    hintText: 'Enter your document name',
+                  ),
+                ),
+              ],
             );
           }),
       bottomNavigationBar: BottomAppBar(
         child: SizedBox(
             height: 50,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                IconButton(
+                if (nextID != -1)
+                  IconButton(
                     onPressed: () async {
-                      await Navigator.of(context).pushNamed("/resources/create/{id#int}/edit", arguments: {"id": widget.vm.index+1});
+                      await Navigator.of(context).pushNamed(
+                          "/resources/create/{id#int}/edit",
+                          arguments: {"id": nextID});
                     },
-                    icon: const Icon(Icons.forward))
+                    icon: const Icon(Icons.forward),
+                  ),
+                if (nextID == -1)
+                  IconButton(
+                      onPressed: () async {
+                        await widget.vm.saveResources();
+
+                        if (!context.mounted) return;
+                        await Navigator.of(context).pushNamed("/resources/list");
+                      }, icon: const Icon(Icons.save))
               ],
             )),
       ),

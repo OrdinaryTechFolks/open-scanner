@@ -9,6 +9,7 @@ import 'package:open_scanner/screen/resources_list.dart';
 import 'package:open_scanner/screen/resources_create_capture.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:flutter/material.dart';
+import 'package:open_scanner/screen/resources_list_vm.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,17 +19,18 @@ Future<void> main() async {
 
  final resourcesCreateCaptureVM = ResourcesCreateCaptureVM(cropToolRepo);
  final resourcesCreateSelectVM = ResourcesCreateSelectVM(cropToolRepo, resourceRepo);
+ final resourcesListVM = ResourceListVM(resourceRepo);
 
   runApp(MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData.dark(useMaterial3: true),
-      home: const ResourcesListScreen(),
+      home: ResourcesListScreen(resourcesListVM),
       onGenerateRoute: (settings) {
         return MaterialPageRoute(builder: (context) {
           final arguments = settings.arguments as Map<String, Object>? ?? {};
         
           switch(settings.name) {
-            case "/resources/list": return const ResourcesListScreen();
+            case "/resources/list": return ResourcesListScreen(resourcesListVM);
             case "/resources/create/capture": return ResourcesCreateCaptureScreen(vm:resourcesCreateCaptureVM);
             case "/resources/create/select": return ResourcesCreateSelectScreen(vm: resourcesCreateSelectVM);
             case "/resources/create/{id#int}/edit": 
