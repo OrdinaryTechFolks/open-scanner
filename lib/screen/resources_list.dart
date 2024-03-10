@@ -30,7 +30,7 @@ class ResourcesListScreen extends StatelessWidget {
                   height: 60,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      fit: BoxFit.none,
+                      fit: BoxFit.fitWidth,
                       image: MemoryImage(resource.image!),
                     ),
                   ),
