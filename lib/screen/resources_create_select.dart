@@ -18,6 +18,20 @@ class ResourcesCreateSelectScreen extends StatefulWidget {
 // A widget that displays the picture taken by the user.
 class ResourcesCreateSelectScreenState
     extends State<ResourcesCreateSelectScreen> {
+  late InitDisposeFn cropToolListener = widget.vm.getCropToolListener();
+
+  @override
+  void initState() {
+    super.initState();
+    cropToolListener.$1();
+  }
+
+  @override
+  void dispose() {
+    cropToolListener.$2();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

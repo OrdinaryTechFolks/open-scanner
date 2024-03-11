@@ -90,9 +90,9 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
                   IconButton(
                       onPressed: () async {
                         await widget.vm.saveResources();
-
                         if (!context.mounted) return;
-                        await Navigator.of(context).pushNamed("/resources/list");
+                        Navigator.of(context).popUntil(ModalRoute.withName("/"));
+                        await Navigator.of(context).pushReplacementNamed("/");
                       }, icon: const Icon(Icons.save))
               ],
             )),
