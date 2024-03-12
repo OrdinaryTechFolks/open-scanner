@@ -1,3 +1,5 @@
+import 'package:open_scanner/open_scanner_db_migrations.dart';
+import 'package:open_scanner/pkg/sqlite_client.dart';
 import 'package:open_scanner/repo/opencv.dart';
 import 'package:open_scanner/repo/resource.dart';
 import 'package:open_scanner/screen/resources_create_capture_vm.dart';
@@ -13,6 +15,9 @@ import 'package:open_scanner/screen/resources_list_vm.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final openScannerDB = SQLiteClient("open_scanner.db", 1, openScannerDBMigrations);
+  await openScannerDB.initDatabase();
+
   final openCVRepo = OpenCVRepo();
   final cropToolRepo = CropToolRepo();
   final resourceRepo = ResourceRepo();
