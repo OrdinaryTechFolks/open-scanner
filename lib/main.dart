@@ -20,7 +20,8 @@ Future<void> main() async {
 
   final openCVRepo = OpenCVRepo();
   final cropToolRepo = CropToolRepo();
-  final resourceRepo = ResourceRepo();
+  final resourceRepo = ResourceRepo(openScannerDB);
+  await resourceRepo.initResourcesFolder();
 
  final resourcesCreateCaptureVM = ResourcesCreateCaptureVM(cropToolRepo);
  final resourcesCreateSelectVM = ResourcesCreateSelectVM(cropToolRepo, resourceRepo);
