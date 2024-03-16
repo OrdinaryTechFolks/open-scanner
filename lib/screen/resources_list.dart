@@ -14,21 +14,25 @@ class ResourcesListScreen extends StatefulWidget {
 }
 
 class ResourcesListScreenState extends State<ResourcesListScreen> {
-  final PagingController<int, ResourceDomain> _pagingController =
+  static final TextEditingController searchTermCtrl =
+      TextEditingController(text: "");
+  final PagingController<int, ResourceDomain> pagingController =
       PagingController(firstPageKey: 0);
 
   @override
   void initState() {
     super.initState();
-    _pagingController.addPageRequestListener((pageKey) async {
-      final resources = await widget.vm.loadResources(pageKey);
-      _pagingController.appendLastPage(resources);
+    pagingController.addPageRequestListener((pageKey) async {
+      final resources =
+          await widget.vm.loadResources(pageKey, searchTermCtrl.text);
+      pagingController.appendLastPage(resources);
     });
   }
 
   @override
   void dispose() {
-    _pagingController.dispose();
+    pagingController.dispose();
+    searchTermCtrl.dispose();
     super.dispose();
   }
 
@@ -36,67 +40,92 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Resources')),
-      body: PagedListView<int, ResourceDomain>.separated(
-        pagingController: _pagingController,
-        builderDelegate: PagedChildBuilderDelegate<ResourceDomain>(
-          itemBuilder: (context, item, index) => item.id == 0
-              ? const SizedBox.shrink()
-              : Container(
-                  color: Colors.white10,
-                  margin: const EdgeInsets.only(bottom: 4),
-                  padding: const EdgeInsets.all(8),
-                  child: SizedBox(
-                    height: 80,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 80,
-                          margin: const EdgeInsets.only(right: 8),
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              fit: BoxFit.fitWidth,
-                              image: MemoryImage(item.image!),
-                            ),
-                          ),
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.name,
-                              style: const TextStyle(fontSize: 20),
-                            ),
-                            Text(item.createdAt.toString())
-                          ],
-                        ),
-                      ],
-                    ),
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              child: TextField(
+                controller: searchTermCtrl,
+                keyboardType: TextInputType.text,
+                onSubmitted: (event) => pagingController.refresh(),
+                decoration: InputDecoration(
+                  label: const Text("Search"),
+                  border: const OutlineInputBorder(),
+                  hintText: "Enter a resource name",
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () => searchTermCtrl.clear(),
                   ),
                 ),
-        ),
-        separatorBuilder: (context, index) {
-          final currResource = _pagingController.itemList![index + 1];
-          final prevResource = _pagingController.itemList![index];
-          if (DateUtils.isSameDay(
-              currResource.createdAt, prevResource.createdAt)) {
-            return const SizedBox.shrink();
-          }
-          return ResourceListSeparator(currResource.createdAt);
-        },
+              ),
+            ),
+          ),
+          PagedSliverList<int, ResourceDomain>.separated(
+            pagingController: pagingController,
+            builderDelegate: PagedChildBuilderDelegate<ResourceDomain>(
+              itemBuilder: (context, item, index) => item.id == 0
+                  ? const SizedBox.shrink()
+                  : Container(
+                      color: Colors.white10,
+                      margin: const EdgeInsets.only(bottom: 4),
+                      padding: const EdgeInsets.all(8),
+                      child: SizedBox(
+                        height: 80,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 80,
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  fit: BoxFit.fitWidth,
+                                  image: MemoryImage(item.image!),
+                                ),
+                              ),
+                            ),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.name,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                                Text(item.createdAt.toString())
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+            ),
+            separatorBuilder: (context, index) {
+              final currResource = pagingController.itemList![index + 1];
+              final prevResource = pagingController.itemList![index];
+              if (DateUtils.isSameDay(
+                  currResource.createdAt, prevResource.createdAt)) {
+                return const SizedBox.shrink();
+              }
+              return ResourceListSeparator(currResource.createdAt);
+            },
+          ),
+        ],
       ),
       bottomNavigationBar: BottomAppBar(
         child: SizedBox(
             height: 50,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                IconButton(
-                    onPressed: () => {
-                          Navigator.of(context)
-                              .pushNamed("/resources/create/capture")
-                        },
-                    icon: const Icon(Icons.add))
+                FilledButton(
+                  onPressed: () => {
+                    Navigator.of(context).pushNamed("/resources/create/capture")
+                  },
+                  child: const Text("Scan"),
+                ),
+                OutlinedButton(
+                    onPressed: () => {}, child: const Text("Select")),
               ],
             )),
       ),

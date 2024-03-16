@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:open_scanner/domain/resource.dart';
+import 'package:open_scanner/pkg/query_builder.dart';
 import 'package:open_scanner/pkg/sqlite_client.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -64,12 +65,16 @@ class ResourceRepo {
     }
   }
 
-  Future<List<ResourceDomain>> loadResources() async {
+  Future<List<ResourceDomain>> loadResources(String searchTerm) async {
     List<ResourceDomain> entities = [];
 
-    final results = await openScannerDB.query(
-      "SELECT id, name, image_path, created_at FROM resources ORDER BY id DESC"
-    );
+    final qb = QueryBuilder("SELECT id, name, image_path, created_at FROM resources", null);
+    if (searchTerm != "") {
+      qb.addQuery("WHERE name LIKE '%' || ? || '%'", [searchTerm]);
+    }
+    qb.addString("ORDER BY id DESC");
+
+    final results = await openScannerDB.query(qb.getQuery(), arguments: qb.getArgs());
 
     for (var result in results){
       final entity = ResourceDomain(); 
