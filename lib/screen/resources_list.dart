@@ -14,7 +14,7 @@ class ResourcesListScreen extends StatefulWidget {
 }
 
 class ResourcesListScreenState extends State<ResourcesListScreen> {
-  static final TextEditingController searchTermCtrl =
+  final TextEditingController searchTermCtrl =
       TextEditingController(text: "");
   final PagingController<int, ResourceDomain> pagingController =
       PagingController(firstPageKey: 0);
@@ -23,9 +23,14 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
   void initState() {
     super.initState();
     pagingController.addPageRequestListener((pageKey) async {
-      final resources =
+      final (resources, nextID) =
           await widget.vm.loadResources(pageKey, searchTermCtrl.text);
-      pagingController.appendLastPage(resources);
+      if (nextID == -1){
+        pagingController.appendLastPage(resources);
+        return;
+      }
+
+      pagingController.appendPage(resources, nextID);
     });
   }
 
@@ -101,12 +106,18 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
                     ),
             ),
             separatorBuilder: (context, index) {
+              // TEMP_FIX for rendering separator before data is available
+              if (index + 1 >= pagingController.itemList!.length) {
+                return const SizedBox.shrink();
+              }
+
               final currResource = pagingController.itemList![index + 1];
               final prevResource = pagingController.itemList![index];
               if (DateUtils.isSameDay(
                   currResource.createdAt, prevResource.createdAt)) {
                 return const SizedBox.shrink();
               }
+
               return ResourceListSeparator(currResource.createdAt);
             },
           ),

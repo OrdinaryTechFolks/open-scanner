@@ -6,11 +6,11 @@ class ResourceListVM {
 
   ResourceListVM(this.resourceRepo);
 
-  Future<List<ResourceDomain>> loadResources(int pageKey, String searchTerm) async {
-    final resources = await resourceRepo.loadResources(searchTerm);
+  Future<(List<ResourceDomain>, int)> loadResources(int pageKey, String searchTerm) async {
+    final (resources, nextID) = await resourceRepo.loadResources(pageKey, searchTerm);
 
-    // workaround for infinite scroll doesn't render separator 
+    // TEMP_FIX for infinite scroll doesn't render separator 
     // before the first element
-    return pageKey == 0 ? [ResourceDomain(), ...resources] : resources;
+    return (pageKey == 0 ? [ResourceDomain(), ...resources] : resources, nextID);
   }
 }

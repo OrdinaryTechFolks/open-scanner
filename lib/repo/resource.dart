@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:open_scanner/config/config.dart';
 import 'package:open_scanner/domain/resource.dart';
 import 'package:open_scanner/pkg/query_builder.dart';
 import 'package:open_scanner/pkg/sqlite_client.dart';
@@ -8,10 +9,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 class ResourceRepo {
+  final Config config;
   final SQLiteClient openScannerDB;
   List<ResourceDomain> entities = [];
 
-  ResourceRepo(this.openScannerDB);  
+  ResourceRepo(this.config, this.openScannerDB);
 
   void resetResources() {
     entities = [];
@@ -43,7 +45,7 @@ class ResourceRepo {
   }
 
   Future<void> initResourcesFolder() async {
-    final appDir = await getApplicationDocumentsDirectory(); 
+    final appDir = await getApplicationDocumentsDirectory();
     final newDir = Directory("${appDir.path}/.blob");
     await newDir.create();
   }
@@ -59,25 +61,34 @@ class ResourceRepo {
 
       file.writeAsBytesSync(entity.image!, flush: true);
       await openScannerDB.execute(
-        "INSERT INTO resources(name, image_path) VALUES (?, ?)", 
+        "INSERT INTO resources(name, image_path) VALUES (?, ?)",
         arguments: [entity.name, filepath],
       );
     }
   }
 
-  Future<List<ResourceDomain>> loadResources(String searchTerm) async {
+  Future<(List<ResourceDomain>, int)> loadResources(
+      int currID, String searchTerm) async {
     List<ResourceDomain> entities = [];
 
-    final qb = QueryBuilder("SELECT id, name, image_path, created_at FROM resources", null);
-    if (searchTerm != "") {
-      qb.addQuery("WHERE name LIKE '%' || ? || '%'", [searchTerm]);
+    final qb = QueryBuilder(
+        "SELECT id, name, image_path, created_at FROM resources WHERE 1 = 1",
+        null);
+
+    if (currID != 0) {
+      qb.addQuery("AND id <= ?", [currID]);
     }
-    qb.addString("ORDER BY id DESC");
 
-    final results = await openScannerDB.query(qb.getQuery(), arguments: qb.getArgs());
+    if (searchTerm != "") {
+      qb.addQuery("AND name LIKE '%' || ? || '%'", [searchTerm]);
+    }
+    qb.addQuery("ORDER BY id DESC LIMIT ?", [config.paginationLimit + 1]);
 
-    for (var result in results){
-      final entity = ResourceDomain(); 
+    final results =
+        await openScannerDB.query(qb.getQuery(), arguments: qb.getArgs());
+
+    for (var result in results) {
+      final entity = ResourceDomain();
       entity.id = result['id'] as int;
       entity.name = result['name'] as String;
 
@@ -90,6 +101,11 @@ class ResourceRepo {
       entities.add(entity);
     }
 
-    return entities;
+    if (entities.length <= config.paginationLimit) {
+      return (entities, -1);
+    }
+
+    final nextEntity = entities.removeLast();
+    return (entities, nextEntity.id);
   }
 }
