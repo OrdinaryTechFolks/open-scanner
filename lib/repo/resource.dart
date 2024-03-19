@@ -91,9 +91,9 @@ class ResourceRepo {
       final entity = ResourceDomain();
       entity.id = result['id'] as int;
       entity.name = result['name'] as String;
+      entity.imagePath = result['image_path'] as String;
 
-      final filepath = result['image_path'] as String;
-      final file = File(filepath);
+      final file = File(entity.imagePath);
       if (!await file.exists()) continue;
       entity.image = file.readAsBytesSync();
 
@@ -107,5 +107,10 @@ class ResourceRepo {
 
     final nextEntity = entities.removeLast();
     return (entities, nextEntity.id);
+  }
+
+  Future<void> deleteResource(int id) async {
+    await openScannerDB
+        .execute("DELETE FROM resources WHERE id = ?", arguments: [id]);
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:open_scanner/domain/resource.dart';
 import 'package:open_scanner/repo/resource.dart';
@@ -63,8 +65,6 @@ class ResourceListVM {
     final List<XFile> files = [];
     for (var (selectedResource) in selectedResources.values) {
       final res = selectedResource.value;
-
-      if (selectedResource.value == null) continue;
       if (res?.image == null) continue;
 
       final file = XFile.fromData(res!.image!,
@@ -72,7 +72,26 @@ class ResourceListVM {
       files.add(file);
     }
 
+    if (files.isEmpty) return ShareResultStatus.dismissed;
+
     final shareRes = await Share.shareXFiles(files);
     return shareRes.status;
+  }
+  
+  Future<int> deleteResources() async {
+    var rowsDeleted = 0;
+    for (var selectedResource in selectedResources.values) {
+      final res = selectedResource.value;
+      if (res == null) continue;
+
+      await resourceRepo.deleteResource(res.id);
+      final file = File(res.imagePath);
+      // TODO: add trycatch wrapper
+      file.deleteSync();
+
+      rowsDeleted++;
+    }
+
+    return rowsDeleted;
   }
 }

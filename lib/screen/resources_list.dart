@@ -16,27 +16,27 @@ class ResourcesListScreen extends StatefulWidget {
 
 class ResourcesListScreenState extends State<ResourcesListScreen> {
   final TextEditingController searchTermCtrl = TextEditingController(text: "");
-  final PagingController<int, ResourceDomain> pagingController =
+  final PagingController<int, ResourceDomain> pagingCtrl =
       PagingController(firstPageKey: 0);
 
   @override
   void initState() {
     super.initState();
-    pagingController.addPageRequestListener((pageKey) async {
+    pagingCtrl.addPageRequestListener((pageKey) async {
       final (resources, nextID) =
           await widget.vm.loadResources(pageKey, searchTermCtrl.text);
       if (nextID == -1) {
-        pagingController.appendLastPage(resources);
+        pagingCtrl.appendLastPage(resources);
         return;
       }
 
-      pagingController.appendPage(resources, nextID);
+      pagingCtrl.appendPage(resources, nextID);
     });
   }
 
   @override
   void dispose() {
-    pagingController.dispose();
+    pagingCtrl.dispose();
     searchTermCtrl.dispose();
     super.dispose();
   }
@@ -53,7 +53,7 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
               child: TextField(
                 controller: searchTermCtrl,
                 keyboardType: TextInputType.text,
-                onSubmitted: (event) => pagingController.refresh(),
+                onSubmitted: (event) => pagingCtrl.refresh(),
                 decoration: InputDecoration(
                   label: const Text("Search"),
                   border: const OutlineInputBorder(),
@@ -62,7 +62,7 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
                     icon: const Icon(Icons.clear),
                     onPressed: () {
                       searchTermCtrl.clear();
-                      pagingController.refresh();
+                      pagingCtrl.refresh();
                     },
                   ),
                 ),
@@ -70,7 +70,7 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
             ),
           ),
           PagedSliverList<int, ResourceDomain>.separated(
-            pagingController: pagingController,
+            pagingController: pagingCtrl,
             builderDelegate: PagedChildBuilderDelegate<ResourceDomain>(
               itemBuilder: (context, item, index) => item.id == 0
                   ? const SizedBox.shrink()
@@ -136,12 +136,12 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
             ),
             separatorBuilder: (context, index) {
               // TEMP_FIX for rendering separator before data is available
-              if (index + 1 >= pagingController.itemList!.length) {
+              if (index + 1 >= pagingCtrl.itemList!.length) {
                 return const SizedBox.shrink();
               }
 
-              final currResource = pagingController.itemList![index + 1];
-              final prevResource = pagingController.itemList![index];
+              final currResource = pagingCtrl.itemList![index + 1];
+              final prevResource = pagingCtrl.itemList![index];
               if (DateUtils.isSameDay(
                   currResource.createdAt, prevResource.createdAt)) {
                 return const SizedBox.shrink();
@@ -195,6 +195,24 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
                             widget.vm.changeActionMode(ActionMode.capture);
                           },
                           child: const Text("Export")),
+                      FilledButton(
+                          style: FilledButton.styleFrom(
+                              backgroundColor: Colors.redAccent),
+                          onPressed: () async {
+                            final count = await widget.vm.deleteResources();
+                            if (count == 0) return;
+
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("$count resources deleted"),
+                              ),
+                            );
+
+                            widget.vm.changeActionMode(ActionMode.capture);
+                            pagingCtrl.refresh();
+                          },
+                          child: const Text("Delete")),
                       OutlinedButton(
                           onPressed: () =>
                               widget.vm.changeActionMode(ActionMode.capture),
