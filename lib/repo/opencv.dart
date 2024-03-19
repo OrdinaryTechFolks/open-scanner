@@ -32,16 +32,28 @@ class OpenCVRepo {
     final heightB = sqrt(pow(srcCorners[1].x - srcCorners[3].x, 2) + pow(srcCorners[1].y - srcCorners[3].y, 2));
     final destHeight = max(heightA, heightB);
 
+    final destRange = [
+      Range(srcCorners.map((e) => e.x).reduce(min).toInt(), srcCorners.map((e) => e.x).reduce(max).toInt()),
+      Range(srcCorners.map((e) => e.y).reduce(min).toInt(), srcCorners.map((e) => e.y).reduce(max).toInt()),
+    ];
+
+    final newCorners = [srcCorners[0], srcCorners[1], srcCorners[3], srcCorners[2]].map((e) => Point<double>(
+      e.x - destRange[0].start.toDouble(),
+      e.y - destRange[1].start.toDouble(),
+    )).toList(growable: false);
+
     final destSize = ui.Size(destWidth, destHeight);
     final destData = transformFFI(
       srcImage.toCImage(),
-      srcCorners.toListPointer(),
+      newCorners.toListPointer(),
+      destRange.toListPointer(),
       destSize.toCSize(),
     );
 
     var destLiseLength = destData.width * destData.height * destData.channels;
     var destList = destData.data.asTypedList(destLiseLength);
-
-    return ImageDomain(destSize, srcImage.channels, destList);
+    var realSize = ui.Size(destData.width.toDouble(), destData.height.toDouble());
+    
+    return ImageDomain(realSize, srcImage.channels, destList);
   }
 }

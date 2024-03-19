@@ -6,6 +6,26 @@ import 'dart:ui' as ui;
 import 'package:open_scanner/domain/image.dart';
 import 'package:ffi/ffi.dart';
 
+class Range {
+  final int start;
+  final int end;
+
+  Range(this.start, this.end);
+
+  @override
+  String toString() {
+    return "start:$start|end:$end";
+  }
+}
+
+final class CRange extends ffi.Struct {
+  @ffi.Int32()
+  external int start;
+
+  @ffi.Int32()
+  external int end;
+}
+
 final class CImage extends ffi.Struct {
   @ffi.Int32()
   external int width;
@@ -37,7 +57,7 @@ final class CSize extends ffi.Struct {
 
 typedef VersionFunc = ffi.Pointer<Utf8> Function();
 typedef TransformFunc = CImage Function(
-    ffi.Pointer<CImage>, ffi.Pointer<CPoint>, ffi.Pointer<CSize>);
+    ffi.Pointer<CImage>, ffi.Pointer<CPoint>, ffi.Pointer<CRange>, ffi.Pointer<CSize>);
 
 extension ImageDomainExts on ImageDomain {
   ffi.Pointer<CImage> toCImage() {
@@ -75,6 +95,17 @@ extension DoublePointListToDoublePointPointer on List<Point<double>> {
     for (var i = 0; i < length; i++) {
       (ptr+i).ref.x = this[i].x;
       (ptr+i).ref.y = this[i].y;
+    }
+    return ptr;
+  }
+}
+
+extension RangeListFFI on List<Range> {
+  ffi.Pointer<CRange> toListPointer() {
+    final ptr = malloc.allocate<CRange>(ffi.sizeOf<CRange>() * length);
+    for (var i = 0; i < length; i++) {
+      (ptr+i).ref.start = this[i].start;
+      (ptr+i).ref.end = this[i].end;
     }
     return ptr;
   }
