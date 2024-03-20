@@ -86,7 +86,7 @@ class ResourceListVM {
 
       await resourceRepo.deleteResource(res.id);
       final file = File(res.imagePath);
-      // TODO: add trycatch wrapper
+      // TODO: [P3] add trycatch wrapper
       file.deleteSync();
 
       rowsDeleted++;
