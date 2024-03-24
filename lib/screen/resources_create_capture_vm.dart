@@ -15,6 +15,8 @@ class ResourcesCreateCaptureVM {
     final controller = CameraController(camera, ResolutionPreset.ultraHigh);
 
     await controller.initialize();
+    await controller.setFlashMode(FlashMode.off);
+
     return controller;
   }
 

@@ -53,7 +53,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        fit: BoxFit.fitHeight,
+                        fit: BoxFit.contain,
                         image: MemoryImage(snapshot.data!.right),
                       ),
                     ),

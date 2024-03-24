@@ -19,6 +19,7 @@ class ResourcesCreateSelectScreen extends StatefulWidget {
 class ResourcesCreateSelectScreenState
     extends State<ResourcesCreateSelectScreen> {
   late InitDisposeFn cropToolListener = widget.vm.getCropToolListener();
+  late final image = widget.vm.getSelectedImage(); 
 
   @override
   void initState() {
@@ -44,7 +45,7 @@ class ResourcesCreateSelectScreenState
         child: Stack(
           children: [
             FutureBuilder(
-                future: widget.vm.getSelectedImage(),
+                future: image.getEncodedList(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting ||
                       snapshot.data == null) {
@@ -58,8 +59,8 @@ class ResourcesCreateSelectScreenState
                   }
 
                   return Container(
-                    width: 720,
-                    height: 1280,
+                    width: image.size.width,
+                    height: image.size.height,
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         fit: BoxFit.none,
@@ -70,7 +71,7 @@ class ResourcesCreateSelectScreenState
                 }),
             // Container(width: 100, height: 100, color: Colors.red),
             for (var i = 0; i < widget.vm.getCropToolLength(); i++)
-              SizedBox(width: 720, height: 1280, child: CropTool(vm: CropToolVM(i, widget.vm.cropToolRepo)))
+              SizedBox(width: image.size.width, height: image.size.height, child: CropTool(vm: CropToolVM(i, widget.vm.cropToolRepo)))
           ],
         ),
       ),

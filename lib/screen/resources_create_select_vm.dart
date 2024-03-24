@@ -1,9 +1,8 @@
-import 'dart:typed_data';
 import 'dart:ui';
 
+import 'package:open_scanner/domain/image.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:open_scanner/repo/resource.dart';
-import 'package:either_dart/either.dart';
 
 typedef InitDisposeFn = (void Function(), void Function());
 
@@ -21,8 +20,8 @@ class ResourcesCreateSelectVM {
     resourceRepo.addResource();
   }
 
-  Future<Either<Error, Uint8List>> getSelectedImage() async {
-    return await cropToolRepo.selectedImage.getEncodedList();
+  ImageDomain getSelectedImage() {
+    return cropToolRepo.selectedImage;
   }
 
   int getCropToolLength() {

@@ -32,7 +32,7 @@ Future<void> main() async {
  final resourcesListVM = ResourceListVM(resourceRepo);
 
   runApp(MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Open Scanner',
       theme: ThemeData.dark(useMaterial3: true),
       home: ResourcesListScreen(resourcesListVM),
       onGenerateRoute: (settings) {
