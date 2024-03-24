@@ -12,7 +12,7 @@ class ResourcesCreateCaptureVM {
     final cameras = await availableCameras();
     final camera = cameras.firstWhere(
         (camera) => camera.lensDirection == CameraLensDirection.back);
-    final controller = CameraController(camera, ResolutionPreset.ultraHigh);
+    final controller = CameraController(camera, ResolutionPreset.ultraHigh, enableAudio: false);
 
     await controller.initialize();
     await controller.setFlashMode(FlashMode.off);
