@@ -44,7 +44,10 @@ class ResourcesCreateCaptureScreenState
     return Scaffold(
       appBar: AppBar(title: const Text('Take a picture')),
       body: Center(
-        child: CameraPreview(cameraController!),
+        child: AspectRatio(
+          aspectRatio: cameraController!.value.aspectRatio,
+          child: CameraPreview(cameraController!),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
