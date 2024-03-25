@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:open_scanner/open_scanner_db_migrations.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
@@ -6,7 +7,7 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 class SQLiteClient {
   final String name;
   final int version;
-  final Map<int, (String, String)> migrations;
+  final Map<int, Migration> migrations;
 
   late Database db;
 
@@ -22,13 +23,15 @@ class SQLiteClient {
         onCreate: (Database db, int version) async {
           for (int i = 1; i <= version; i++) {
             if (migrations[i] == null) continue;
-            await db.execute(migrations[i]!.$1);
+            final upQuery = await migrations[i]!.$1(db);
+            if (upQuery != "") await db.execute(upQuery);
           }
         },
         onUpgrade: (db, oldVersion, newVersion) async {
           for (int i = oldVersion + 1; i <= newVersion; i++) {
             if (migrations[i] == null) continue;
-            await db.execute(migrations[i]!.$1);
+            final upQuery = await migrations[i]!.$1(db);
+            if (upQuery != "") await db.execute(upQuery);
           }
         },
         onDowngrade: (db, oldVersion, newVersion) async {

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:open_scanner/domain/resource.dart';
 import 'package:open_scanner/repo/resource.dart';
@@ -85,10 +83,6 @@ class ResourceListVM {
       if (res == null) continue;
 
       await resourceRepo.deleteResource(res.id);
-      final file = File(res.imagePath);
-      // TODO: [P3] add trycatch wrapper
-      file.deleteSync();
-
       rowsDeleted++;
     }
 

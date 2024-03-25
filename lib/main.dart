@@ -19,13 +19,12 @@ Future<void> main() async {
 
   final config = Config();
 
-  final openScannerDB = SQLiteClient("open_scanner.db", 1, openScannerDBMigrations);
+  final openScannerDB = SQLiteClient("open_scanner.db", 2, openScannerDBMigrations);
   await openScannerDB.initDatabase();
 
   final openCVRepo = OpenCVRepo();
   final cropToolRepo = CropToolRepo();
   final resourceRepo = ResourceRepo(config, openScannerDB);
-  await resourceRepo.initResourcesFolder();
 
  final resourcesCreateCaptureVM = ResourcesCreateCaptureVM(cropToolRepo);
  final resourcesCreateSelectVM = ResourcesCreateSelectVM(cropToolRepo, resourceRepo);
