@@ -1,1 +1,3 @@
 privacy_policy.html linguist-documentation
+web/*_sw.js linguist-generated
+web/*.wasm linguist-generated
