@@ -45,7 +45,7 @@ class ResourcesCreateCaptureScreenState
       appBar: AppBar(title: const Text('Take a picture')),
       body: Center(
         child: AspectRatio(
-          aspectRatio: cameraController!.value.aspectRatio,
+          aspectRatio: 1 / cameraController!.value.aspectRatio,
           child: CameraPreview(cameraController!),
         ),
       ),
