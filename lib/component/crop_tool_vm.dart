@@ -1,4 +1,3 @@
-
 import 'package:open_scanner/repo/crop_tool.dart';
 
 class CropToolVM {
@@ -9,5 +8,9 @@ class CropToolVM {
 
   int getCornersLength() {
     return cropToolRepo.getCropToolCornersLength(index);
+  }
+
+  int getEdgesLength() {
+    return cropToolRepo.getEdgesLength(index);
   }
 }
