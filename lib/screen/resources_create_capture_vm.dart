@@ -1,7 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:open_scanner/domain/image.dart';
+import 'package:open_scanner/pkg/safe_catch.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter/widgets.dart';
 
 class ResourcesCreateCaptureVM {
   final CropToolRepo cropToolRepo;
@@ -11,11 +12,17 @@ class ResourcesCreateCaptureVM {
   Future<CameraController> getCameraController() async {
     final cameras = await availableCameras();
     final camera = cameras.firstWhere(
-        (camera) => camera.lensDirection == CameraLensDirection.back);
-    final controller = CameraController(camera, ResolutionPreset.ultraHigh, enableAudio: false);
+      (camera) => camera.lensDirection == CameraLensDirection.back,
+      orElse: () => cameras.first,
+    );
+    final controller = CameraController(
+      camera,
+      ResolutionPreset.ultraHigh,
+      enableAudio: false,
+    );
 
     await controller.initialize();
-    await controller.setFlashMode(FlashMode.off);
+    await safeCatchFuture(() => controller.setFlashMode(FlashMode.off));
 
     return controller;
   }
@@ -25,16 +32,17 @@ class ResourcesCreateCaptureVM {
   }
 
   Future<XFile> takePicture(CameraController controller) async {
-    await controller.setFocusMode(FocusMode.locked);
-    await controller.setExposureMode(ExposureMode.locked);
+    await safeCatchFuture(() => controller.setFocusMode(FocusMode.locked));
+    await safeCatchFuture(
+        () => controller.setExposureMode(ExposureMode.locked));
     final imageFile = await controller.takePicture();
-    await controller.setFocusMode(FocusMode.auto);
-    await controller.setExposureMode(ExposureMode.auto);
+    await safeCatchFuture(() => controller.setFocusMode(FocusMode.auto));
+    await safeCatchFuture(() => controller.setExposureMode(ExposureMode.auto));
 
     return imageFile;
   }
 
-  Future<Error?> setSelectedImage(XFile file) async{
+  Future<Error?> setSelectedImage(XFile file) async {
     final bytes = await file.readAsBytes();
     final img = await ImageDomain.fromEncodedList(bytes);
     if (img == null) return FlutterError("Decoded image returns null");
