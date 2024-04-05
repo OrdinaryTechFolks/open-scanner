@@ -1,4 +1,5 @@
 import 'package:open_scanner/component/crop_tool_corner.dart';
+import 'package:open_scanner/component/crop_tool_edge.dart';
 import 'package:open_scanner/component/crop_tool_plane.dart';
 import 'package:open_scanner/component/crop_tool_plane_vm.dart';
 import 'package:open_scanner/component/crop_tool_vm.dart';
@@ -17,6 +18,8 @@ class CropTool extends StatelessWidget {
         CropToolPlane(vm: CropToolPlaneVM(vm.index, vm.cropToolRepo)),
         for (int i = 0; i < vm.getCornersLength(); i++) 
           CropToolCorner(vm: CropToolCornerVM(vm.index, i, vm.cropToolRepo)),
+        for (int i = 0; i < vm.getEdgesLength(); i++)
+          CropToolEdge(vm.index, i, vm.cropToolRepo)
       ],
     );
   }
