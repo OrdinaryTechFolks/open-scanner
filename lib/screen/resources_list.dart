@@ -60,22 +60,23 @@ class ResourcesListScreen extends StatefulWidget {
   }
 
   Future<ShareResultStatus> exportResources() async {
-    final resources =
-        selectedResources.entries.whereType<ResourceDomain>().toList();
+    final resources = selectedResources.values
+        .map((e) => e.value)
+        .whereType<ResourceDomain>()
+        .toList();
 
     return resourceRepo.exportResources(resources);
   }
 
   Future<int> deleteResources() async {
-    final ids = selectedResources.entries
-        .whereType<ResourceDomain>()
-        .map((e) => e.id)
+    final ids = selectedResources.values
+        .map((e) => e.value?.id)
+        .whereType<int>()
         .toList();
 
-    await resourceRepo.deleteResources(ids);
-    return ids.length;
+    return resourceRepo.deleteResources(ids);
   }
-  
+
   ResourcesListScreen(this.resourceRepo, {super.key});
 
   @override
@@ -148,8 +149,7 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
                       builder: (context, res, child) {
                         return GestureDetector(
                           onTap: () {
-                            if (widget.actionMode.value !=
-                                ActionMode.select) {
+                            if (widget.actionMode.value != ActionMode.select) {
                               return;
                             }
 

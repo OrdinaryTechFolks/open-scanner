@@ -105,9 +105,11 @@ class ResourceRepo {
     return shareRes.status;
   }
 
-  Future<void> deleteResources(List<int> id) async {
-    final placeholders = id.map((_) => "?").join(", ");
+  Future<int> deleteResources(List<int> ids) async {
+    final placeholders = ids.map((_) => "?").join(", ");
     await openScannerDB
-        .execute("DELETE FROM resources WHERE id IN ($placeholders)", arguments: id);
+        .execute("DELETE FROM resources WHERE id IN ($placeholders)", arguments: ids);
+
+    return ids.length;
   }
 }
