@@ -4,22 +4,21 @@ import 'package:open_scanner/component/crop_tool_plane_painter.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 
 class CropToolPlane extends StatefulWidget {
-  final int index;
   final CropToolRepo cropToolRepo;
 
   listenCornerChanges(VoidCallback cb) {
-    return cropToolRepo.listenCropTool(index, cb);
+    return cropToolRepo.tool.listen(cb);
   }
 
   void moveCropTool(Offset delta) {
-    return cropToolRepo.moveCropTool(index, delta);
+    return cropToolRepo.tool.moveCropTool(delta);
   }
 
   List<Point<double>> getCropToolCorners() {
-    return cropToolRepo.getCropToolCorners(index);
+    return cropToolRepo.tool.getCorners();
   }
 
-  const CropToolPlane(this.index, this.cropToolRepo, {super.key});
+  const CropToolPlane(this.cropToolRepo, {super.key});
 
   @override
   CropToolPlaneState createState() => CropToolPlaneState();
@@ -41,7 +40,7 @@ class CropToolPlaneState extends State<CropToolPlane> {
         });
       },
       child: CustomPaint(
-        painter: CropToolPlanePainter(widget),
+        painter: CropToolPlanePainter(widget.cropToolRepo.tool),
         child: Container(),
       ),
     );

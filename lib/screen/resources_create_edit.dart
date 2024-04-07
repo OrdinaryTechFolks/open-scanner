@@ -15,8 +15,8 @@ class ResourcesCreateEditScreen extends StatefulWidget {
     final resource = resourceRepo.getResource(index);
     if (resource.image != null) return Right(resource.image!);
 
-    final corners = cropToolRepo.getCropToolCorners(index);
-    final destImage = openCVRepo.transform(cropToolRepo.selectedImage, corners);
+    final corners = cropToolRepo.tool.getCorners();
+    final destImage = openCVRepo.transform(cropToolRepo.image, corners);
 
     final encodeRes = await destImage.getEncodedList();
     if (encodeRes.isLeft) return Left(encodeRes.left);
@@ -25,17 +25,11 @@ class ResourcesCreateEditScreen extends StatefulWidget {
     return Right(encodeRes.right);
   }
 
-  int getNextIndex() {
-    final nextID = index + 1;
-    if (nextID >= cropToolRepo.entities.length) return -1;
-    return nextID;
-  }
-
-  String getResourceName(){
+  String getResourceName() {
     return resourceRepo.getResource(index).name;
   }
 
-  void setResourceName(String name){
+  void setResourceName(String name) {
     resourceRepo.setResourceName(index, name);
   }
 
@@ -43,7 +37,9 @@ class ResourcesCreateEditScreen extends StatefulWidget {
     await resourceRepo.saveResources();
   }
 
-  const ResourcesCreateEditScreen(this.index, this.cropToolRepo, this.openCVRepo, this.resourceRepo, {super.key});
+  const ResourcesCreateEditScreen(
+      this.index, this.cropToolRepo, this.openCVRepo, this.resourceRepo,
+      {super.key});
 
   @override
   ResourcesCreateEditScreenState createState() =>
@@ -59,7 +55,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
     super.initState();
     nameFieldCtrl.text = widget.getResourceName();
   }
-  
+
   @override
   void dispose() {
     super.dispose();
@@ -68,7 +64,6 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final nextID = widget.getNextIndex();
     return Scaffold(
       appBar: AppBar(title: const Text('Edit the resource')),
       body: FutureBuilder(
@@ -116,23 +111,15 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (nextID != -1)
-                  IconButton(
-                    onPressed: () async {
-                      await Navigator.of(context).pushNamed(
-                          "/resources/create/{id#int}/edit",
-                          arguments: {"id": nextID});
-                    },
-                    icon: const Icon(Icons.forward),
-                  ),
-                if (nextID == -1)
-                  IconButton(
-                      onPressed: () async {
-                        await widget.saveResources();
-                        if (!context.mounted) return;
-                        Navigator.of(context).popUntil(ModalRoute.withName("/"));
-                        await Navigator.of(context).pushReplacementNamed("/");
-                      }, icon: const Icon(Icons.save))
+                IconButton(
+                  onPressed: () async {
+                    await widget.saveResources();
+                    if (!context.mounted) return;
+                    Navigator.of(context).popUntil(ModalRoute.withName("/"));
+                    await Navigator.of(context).pushReplacementNamed("/");
+                  },
+                  icon: const Icon(Icons.save),
+                )
               ],
             )),
       ),

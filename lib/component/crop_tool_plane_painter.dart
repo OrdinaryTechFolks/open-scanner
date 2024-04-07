@@ -1,12 +1,12 @@
 
 import 'package:flutter/material.dart';
-import 'package:open_scanner/component/crop_tool_plane.dart';
+import 'package:open_scanner/domain/crop_tool.dart';
 
 class CropToolPlanePainter extends CustomPainter {
   late Path path;
 
-  CropToolPlanePainter(CropToolPlane parent) {
-    final corners = parent.getCropToolCorners();
+  CropToolPlanePainter(CropToolDomain cropTool) {
+    final corners = cropTool.getCorners();
     path = Path()
       ..moveTo(corners[0].x, corners[0].y)
       ..lineTo(corners[1].x, corners[1].y)

@@ -1,6 +1,5 @@
 import 'package:open_scanner/component/crop_tool.dart';
 import 'package:open_scanner/domain/image.dart';
-import 'package:open_scanner/pkg/init_dispose.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:open_scanner/repo/resource.dart';
 import 'package:flutter/material.dart';
@@ -10,36 +9,14 @@ class ResourcesCreateSelectScreen extends StatefulWidget {
   final ResourceRepo resourceRepo;
 
   void resetCropTool() {
-    cropToolRepo.resetCropTools();
     resourceRepo.resetResources();
     
-    cropToolRepo.addCropTool(const Offset(300, 300));
+    cropToolRepo.addTool(const Offset(300, 300));
     resourceRepo.addResource();
   }
 
   ImageDomain getSelectedImage() {
-    return cropToolRepo.selectedImage;
-  }
-
-  int getCropToolLength() {
-    return cropToolRepo.entities.length;
-  }
-
-  InitDisposeFn getCropToolListener(){
-    final List<InitDisposeFn> initDisposeFns = [];
-    
-    for (var i = 0; i < cropToolRepo.entityNotifiers.length; i++) {
-      fn() => resourceRepo.resetResource(i);
-      initDisposeFns.add((
-          () { cropToolRepo.entityNotifiers[i].addListener(fn); },
-          () { cropToolRepo.entityNotifiers[i].removeListener(fn); },
-      ));
-    }
-
-    return (
-      () { for (var (initFn, _) in initDisposeFns) { initFn(); } },
-      () { for (var (_, disposeFn) in initDisposeFns) { disposeFn(); } },
-    );
+    return cropToolRepo.image;
   }
 
   ResourcesCreateSelectScreen(this.cropToolRepo, this.resourceRepo, {super.key}){
@@ -54,20 +31,7 @@ class ResourcesCreateSelectScreen extends StatefulWidget {
 // A widget that displays the picture taken by the user.
 class ResourcesCreateSelectScreenState
     extends State<ResourcesCreateSelectScreen> {
-  late InitDisposeFn cropToolListener = widget.getCropToolListener();
   late final image = widget.getSelectedImage(); 
-
-  @override
-  void initState() {
-    super.initState();
-    cropToolListener.$1();
-  }
-
-  @override
-  void dispose() {
-    cropToolListener.$2();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,8 +70,7 @@ class ResourcesCreateSelectScreenState
                   );
                 }),
             // Container(width: 100, height: 100, color: Colors.red),
-            for (var i = 0; i < widget.getCropToolLength(); i++)
-              SizedBox(width: image.size.width, height: image.size.height, child: CropTool(i, widget.cropToolRepo))
+            SizedBox(width: image.size.width, height: image.size.height, child: CropTool(widget.cropToolRepo))
           ],
         ),
       ),
