@@ -1,10 +1,49 @@
-import 'package:open_scanner/screen/resources_create_edit_vm.dart';
+import 'dart:typed_data';
+import 'package:either_dart/either.dart';
+import 'package:open_scanner/repo/crop_tool.dart';
+import 'package:open_scanner/repo/opencv.dart';
+import 'package:open_scanner/repo/resource.dart';
 import 'package:flutter/material.dart';
 
 class ResourcesCreateEditScreen extends StatefulWidget {
-  final ResourcesCreateEditVM vm;
+  final int index;
+  final CropToolRepo cropToolRepo;
+  final OpenCVRepo openCVRepo;
+  final ResourceRepo resourceRepo;
 
-  const ResourcesCreateEditScreen({super.key, required this.vm});
+  Future<Either<Error, Uint8List>> getTransformedImage() async {
+    final resource = resourceRepo.getResource(index);
+    if (resource.image != null) return Right(resource.image!);
+
+    final corners = cropToolRepo.getCropToolCorners(index);
+    final destImage = openCVRepo.transform(cropToolRepo.selectedImage, corners);
+
+    final encodeRes = await destImage.getEncodedList();
+    if (encodeRes.isLeft) return Left(encodeRes.left);
+
+    resourceRepo.setResourceImage(index, encodeRes.right);
+    return Right(encodeRes.right);
+  }
+
+  int getNextIndex() {
+    final nextID = index + 1;
+    if (nextID >= cropToolRepo.entities.length) return -1;
+    return nextID;
+  }
+
+  String getResourceName(){
+    return resourceRepo.getResource(index).name;
+  }
+
+  void setResourceName(String name){
+    resourceRepo.setResourceName(index, name);
+  }
+
+  Future<void> saveResources() async {
+    await resourceRepo.saveResources();
+  }
+
+  const ResourcesCreateEditScreen(this.index, this.cropToolRepo, this.openCVRepo, this.resourceRepo, {super.key});
 
   @override
   ResourcesCreateEditScreenState createState() =>
@@ -18,7 +57,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
   @override
   void initState() {
     super.initState();
-    nameFieldCtrl.text = widget.vm.getResourceName();
+    nameFieldCtrl.text = widget.getResourceName();
   }
   
   @override
@@ -29,11 +68,11 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final nextID = widget.vm.getNextIndex();
+    final nextID = widget.getNextIndex();
     return Scaffold(
       appBar: AppBar(title: const Text('Edit the resource')),
       body: FutureBuilder(
-          future: widget.vm.getTransformedImage(),
+          future: widget.getTransformedImage(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting ||
                 snapshot.data == null) {
@@ -61,7 +100,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
                 ),
                 TextField(
                   controller: nameFieldCtrl,
-                  onChanged: (value) => widget.vm.setResourceName(value),
+                  onChanged: (value) => widget.setResourceName(value),
                   decoration: const InputDecoration(
                     label: Text("Name"),
                     border: OutlineInputBorder(),
@@ -89,7 +128,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
                 if (nextID == -1)
                   IconButton(
                       onPressed: () async {
-                        await widget.vm.saveResources();
+                        await widget.saveResources();
                         if (!context.mounted) return;
                         Navigator.of(context).popUntil(ModalRoute.withName("/"));
                         await Navigator.of(context).pushReplacementNamed("/");

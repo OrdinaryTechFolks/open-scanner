@@ -1,25 +1,32 @@
 import 'package:open_scanner/component/crop_tool_corner.dart';
 import 'package:open_scanner/component/crop_tool_edge.dart';
 import 'package:open_scanner/component/crop_tool_plane.dart';
-import 'package:open_scanner/component/crop_tool_plane_vm.dart';
-import 'package:open_scanner/component/crop_tool_vm.dart';
-import 'package:open_scanner/component/crop_tool_corner_vm.dart';
 import 'package:flutter/material.dart';
+import 'package:open_scanner/repo/crop_tool.dart';
 
 class CropTool extends StatelessWidget {
-  final CropToolVM vm;
+  final int index;
+  final CropToolRepo cropToolRepo;
 
-  const CropTool({super.key, required this.vm});
+  int getCornersLength() {
+    return cropToolRepo.getCropToolCornersLength(index);
+  }
+
+  int getEdgesLength() {
+    return cropToolRepo.getEdgesLength(index);
+  }
+
+  const CropTool(this.index, this.cropToolRepo, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        CropToolPlane(vm: CropToolPlaneVM(vm.index, vm.cropToolRepo)),
-        for (int i = 0; i < vm.getCornersLength(); i++) 
-          CropToolCorner(vm: CropToolCornerVM(vm.index, i, vm.cropToolRepo)),
-        for (int i = 0; i < vm.getEdgesLength(); i++)
-          CropToolEdge(vm.index, i, vm.cropToolRepo)
+        CropToolPlane(index, cropToolRepo),
+        for (int i = 0; i < getCornersLength(); i++) 
+          CropToolCorner(index, i, cropToolRepo),
+        for (int i = 0; i < getEdgesLength(); i++)
+          CropToolEdge(index, i, cropToolRepo)
       ],
     );
   }

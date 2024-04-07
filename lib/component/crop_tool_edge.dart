@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:open_scanner/domain/crop_tool.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 
 class CropToolEdge extends StatefulWidget {
   final int index;
   final int edgeIndex;
   final CropToolRepo cropToolRepo;
+
+  EdgeTransform getEdgeTransform() {
+    return cropToolRepo.getEdgeTransform(index, edgeIndex);
+  }
+
+  void moveEdge(Offset delta) {
+    return cropToolRepo.moveEdge(index, edgeIndex, delta);
+  }
+
+  listenCornerChanges(VoidCallback cb) {
+    return cropToolRepo.listenCropTool(index, cb);
+  }
 
   const CropToolEdge(this.index, this.edgeIndex, this.cropToolRepo,
       {super.key});
@@ -17,21 +30,19 @@ class CropToolEdgeState extends State<CropToolEdge> {
   @override
   void initState() {
     super.initState();
-    widget.cropToolRepo.listenCropTool(widget.index, () => setState(() => {}));
+    widget.listenCornerChanges(() => setState(() => {}));
   }
 
   @override
   Widget build(BuildContext context) {
-    final edgeTransform =
-        widget.cropToolRepo.getEdgeTransform(widget.index, widget.edgeIndex);
+    final edgeTransform = widget.getEdgeTransform();
     return Positioned(
       top: edgeTransform.position.y - 15,
       left: edgeTransform.position.x - 45,
       child: GestureDetector(
         onPanUpdate: (details) {
           setState(() {
-            widget.cropToolRepo
-                .moveEdge(widget.index, widget.edgeIndex, details.delta);
+            widget.moveEdge(details.delta);
           });
         },
         child: Transform.rotate(
