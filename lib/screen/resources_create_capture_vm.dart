@@ -22,8 +22,6 @@ class ResourcesCreateCaptureVM {
     );
 
     await controller.initialize();
-    await safeCatchFuture(() => controller.setFlashMode(FlashMode.off));
-
     return controller;
   }
 
@@ -32,6 +30,7 @@ class ResourcesCreateCaptureVM {
   }
 
   Future<XFile> takePicture(CameraController controller) async {
+    await safeCatchFuture(() => controller.setFlashMode(FlashMode.off));
     await safeCatchFuture(() => controller.setFocusMode(FocusMode.locked));
     await safeCatchFuture(
         () => controller.setExposureMode(ExposureMode.locked));
