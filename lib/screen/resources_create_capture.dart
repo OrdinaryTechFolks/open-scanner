@@ -14,57 +14,52 @@ class ResourcesCreateCaptureScreen extends StatefulWidget {
 
 class ResourcesCreateCaptureScreenState
     extends State<ResourcesCreateCaptureScreen> {
-  CameraController? cameraController;
+  late Future<CameraController> getCameraController = widget.vm.getCameraController();
 
   @override
-  void initState() {
-    super.initState();
-    initStateAsync();
-  }
-
-  initStateAsync() async {
-    cameraController = await widget.vm.getCameraController();
-    setState(() {});
-  }
-
-  @override
-  void dispose() {
-    if (cameraController != null) {
-      widget.vm.disposeController(cameraController!);
-    }
+  void dispose() async {
     super.dispose();
+    final cameraController = await getCameraController;
+    widget.vm.disposeController(cameraController);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (cameraController == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    return FutureBuilder(
+      future: getCameraController,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
+        }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Take a picture')),
-      body: Center(
-        child: AspectRatio(
-          aspectRatio: 1 / cameraController!.value.aspectRatio,
-          child: CameraPreview(cameraController!),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final file = await widget.vm.takePicture(cameraController!);
-          final setRes = await widget.vm.setSelectedImage(file);
+        final cameraController = snapshot.data!;
+        return Scaffold(
+          appBar: AppBar(title: const Text('Take a picture')),
+          body: Center(
+            child: AspectRatio(
+              aspectRatio: 1 / cameraController.value.aspectRatio,
+              child: CameraPreview(cameraController),
+            ),
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () async {
+              final file = await widget.vm.takePicture(cameraController);
+              final setRes = await widget.vm.setSelectedImage(file);
 
-          if (!context.mounted) return;
-          if (setRes != null) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(setRes.toString())));
-            return;
-          }
+              if (!context.mounted) return;
+              if (setRes != null) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(setRes.toString())));
+                return;
+              }
 
-          await Navigator.of(context).pushNamed("/resources/create/select");
-        },
-        child: const Icon(Icons.camera_alt),
-      ),
+              await Navigator.of(context).pushNamed("/resources/create/select");
+            },
+            child: const Icon(Icons.camera_alt),
+          ),
+        );
+      },
     );
   }
 }
