@@ -1,5 +1,4 @@
 import 'package:open_scanner/component/crop_tool.dart';
-import 'package:open_scanner/component/crop_tool_vm.dart';
 import 'package:open_scanner/screen/resources_create_select_vm.dart';
 import 'package:flutter/material.dart';
 
@@ -71,7 +70,7 @@ class ResourcesCreateSelectScreenState
                 }),
             // Container(width: 100, height: 100, color: Colors.red),
             for (var i = 0; i < widget.vm.getCropToolLength(); i++)
-              SizedBox(width: image.size.width, height: image.size.height, child: CropTool(vm: CropToolVM(i, widget.vm.cropToolRepo)))
+              SizedBox(width: image.size.width, height: image.size.height, child: CropTool(i, widget.vm.cropToolRepo))
           ],
         ),
       ),
