@@ -1,11 +1,54 @@
-import 'package:open_scanner/screen/resources_create_capture_vm.dart';
+import 'package:open_scanner/domain/image.dart';
+import 'package:open_scanner/pkg/safe_catch.dart';
+import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 class ResourcesCreateCaptureScreen extends StatefulWidget {
-  const ResourcesCreateCaptureScreen({super.key, required this.vm});
+  final CropToolRepo cropToolRepo;
 
-  final ResourcesCreateCaptureVM vm;
+  Future<CameraController> getCameraController() async {
+    final cameras = await availableCameras();
+    final camera = cameras.firstWhere(
+      (camera) => camera.lensDirection == CameraLensDirection.back,
+      orElse: () => cameras.first,
+    );
+    final controller = CameraController(
+      camera,
+      ResolutionPreset.ultraHigh,
+      enableAudio: false,
+    );
+
+    await controller.initialize();
+    return controller;
+  }
+
+  disposeController(CameraController controller) {
+    controller.dispose();
+  }
+
+  Future<XFile> takePicture(CameraController controller) async {
+    await safeCatchFuture(() => controller.setFlashMode(FlashMode.off));
+    await safeCatchFuture(() => controller.setFocusMode(FocusMode.locked));
+    await safeCatchFuture(
+        () => controller.setExposureMode(ExposureMode.locked));
+    final imageFile = await controller.takePicture();
+    await safeCatchFuture(() => controller.setFocusMode(FocusMode.auto));
+    await safeCatchFuture(() => controller.setExposureMode(ExposureMode.auto));
+
+    return imageFile;
+  }
+
+  Future<Error?> setSelectedImage(XFile file) async {
+    final bytes = await file.readAsBytes();
+    final img = await ImageDomain.fromEncodedList(bytes);
+    if (img == null) return FlutterError("Decoded image returns null");
+
+    cropToolRepo.selectedImage = img;
+    return null;
+  }
+
+  const ResourcesCreateCaptureScreen(this.cropToolRepo, {super.key});
 
   @override
   ResourcesCreateCaptureScreenState createState() =>
@@ -14,13 +57,14 @@ class ResourcesCreateCaptureScreen extends StatefulWidget {
 
 class ResourcesCreateCaptureScreenState
     extends State<ResourcesCreateCaptureScreen> {
-  late Future<CameraController> getCameraController = widget.vm.getCameraController();
+  late Future<CameraController> getCameraController =
+      widget.getCameraController();
 
   @override
   void dispose() async {
     super.dispose();
     final cameraController = await getCameraController;
-    widget.vm.disposeController(cameraController);
+    widget.disposeController(cameraController);
   }
 
   @override
@@ -44,8 +88,8 @@ class ResourcesCreateCaptureScreenState
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () async {
-              final file = await widget.vm.takePicture(cameraController);
-              final setRes = await widget.vm.setSelectedImage(file);
+              final file = await widget.takePicture(cameraController);
+              final setRes = await widget.setSelectedImage(file);
 
               if (!context.mounted) return;
               if (setRes != null) {

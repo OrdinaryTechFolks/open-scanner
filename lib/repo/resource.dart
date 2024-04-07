@@ -4,6 +4,7 @@ import 'package:open_scanner/config/config.dart';
 import 'package:open_scanner/domain/resource.dart';
 import 'package:open_scanner/pkg/query_builder.dart';
 import 'package:open_scanner/pkg/sqlite_client.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ResourceRepo {
   final Config config;
@@ -87,8 +88,26 @@ class ResourceRepo {
     return (entities, nextEntity.id);
   }
 
-  Future<void> deleteResource(int id) async {
+  Future<ShareResultStatus> exportResources(
+      List<ResourceDomain> resources) async {
+    final List<XFile> files = [];
+    for (var res in resources) {
+      if (res.image == null) continue;
+
+      final file = XFile.fromData(res.image!,
+          name: res.name, mimeType: 'image/png', lastModified: res.createdAt);
+      files.add(file);
+    }
+
+    if (files.isEmpty) return ShareResultStatus.dismissed;
+
+    final shareRes = await Share.shareXFiles(files);
+    return shareRes.status;
+  }
+
+  Future<void> deleteResources(List<int> id) async {
+    final placeholders = id.map((_) => "?").join(", ");
     await openScannerDB
-        .execute("DELETE FROM resources WHERE id = ?", arguments: [id]);
+        .execute("DELETE FROM resources WHERE id IN ($placeholders)", arguments: id);
   }
 }

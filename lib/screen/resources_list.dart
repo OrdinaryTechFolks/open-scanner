@@ -2,13 +2,81 @@ import 'package:flutter/material.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:intl/intl.dart';
 import 'package:open_scanner/domain/resource.dart';
-import 'package:open_scanner/screen/resources_list_vm.dart';
+import 'package:open_scanner/repo/resource.dart';
 import 'package:share_plus/share_plus.dart';
 
-class ResourcesListScreen extends StatefulWidget {
-  final ResourceListVM vm;
+enum ActionMode { capture, select }
 
-  const ResourcesListScreen(this.vm, {super.key});
+class ResourcesListScreen extends StatefulWidget {
+  final ResourceRepo resourceRepo;
+  final selectedResources = <int, ValueNotifier<ResourceDomain?>>{};
+  final actionMode = ValueNotifier(ActionMode.capture);
+
+  Future<(List<ResourceDomain>, int)> loadResources(
+      int pageKey, String searchTerm) async {
+    final (resources, nextID) =
+        await resourceRepo.loadResources(pageKey, searchTerm);
+
+    // TEMP_FIX for infinite scroll doesn't render separator
+    // before the first element
+    return (
+      pageKey == 0 ? [ResourceDomain(), ...resources] : resources,
+      nextID
+    );
+  }
+
+  ValueNotifier<ResourceDomain?> getSelectedResourceNotifier(int id) {
+    if (!selectedResources.containsKey(id)) {
+      selectedResources[id] = ValueNotifier(null);
+    }
+
+    return selectedResources[id]!;
+  }
+
+  void selectResource(ResourceDomain res) {
+    selectedResources[res.id]!.value = res;
+  }
+
+  void deselectResource(int id) {
+    selectedResources[id]!.value = null;
+  }
+
+  void clearSelectedResources() {
+    for (var selectedResource in selectedResources.values) {
+      selectedResource.value = null;
+    }
+  }
+
+  ValueNotifier<ActionMode> getActionModeNotifier() {
+    return actionMode;
+  }
+
+  void changeActionMode(ActionMode mode) {
+    if (mode == ActionMode.capture) {
+      clearSelectedResources();
+    }
+
+    actionMode.value = mode;
+  }
+
+  Future<ShareResultStatus> exportResources() async {
+    final resources =
+        selectedResources.entries.whereType<ResourceDomain>().toList();
+
+    return resourceRepo.exportResources(resources);
+  }
+
+  Future<int> deleteResources() async {
+    final ids = selectedResources.entries
+        .whereType<ResourceDomain>()
+        .map((e) => e.id)
+        .toList();
+
+    await resourceRepo.deleteResources(ids);
+    return ids.length;
+  }
+  
+  ResourcesListScreen(this.resourceRepo, {super.key});
 
   @override
   State<StatefulWidget> createState() => ResourcesListScreenState();
@@ -24,7 +92,7 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
     super.initState();
     pagingCtrl.addPageRequestListener((pageKey) async {
       final (resources, nextID) =
-          await widget.vm.loadResources(pageKey, searchTermCtrl.text);
+          await widget.loadResources(pageKey, searchTermCtrl.text);
       if (nextID == -1) {
         pagingCtrl.appendLastPage(resources);
         return;
@@ -76,20 +144,20 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
                   ? const SizedBox.shrink()
                   : ValueListenableBuilder(
                       valueListenable:
-                          widget.vm.getSelectedResourceNotifier(item.id),
+                          widget.getSelectedResourceNotifier(item.id),
                       builder: (context, res, child) {
                         return GestureDetector(
                           onTap: () {
-                            if (widget.vm.actionMode.value !=
+                            if (widget.actionMode.value !=
                                 ActionMode.select) {
                               return;
                             }
 
                             if (res == null) {
-                              return widget.vm.selectResource(item);
+                              return widget.selectResource(item);
                             }
 
-                            widget.vm.deselectResource(item.id);
+                            widget.deselectResource(item.id);
                           },
                           child: Container(
                             decoration: BoxDecoration(
@@ -156,7 +224,7 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
         child: SizedBox(
           height: 50,
           child: ValueListenableBuilder(
-            valueListenable: widget.vm.getActionModeNotifier(),
+            valueListenable: widget.getActionModeNotifier(),
             builder: (context, value, child) => Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -171,13 +239,13 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
                       ),
                       OutlinedButton(
                           onPressed: () =>
-                              widget.vm.changeActionMode(ActionMode.select),
+                              widget.changeActionMode(ActionMode.select),
                           child: const Text("Select")),
                     ],
                   ActionMode.select => [
                       FilledButton(
                           onPressed: () async {
-                            final status = await widget.vm.exportResources();
+                            final status = await widget.exportResources();
                             if (status == ShareResultStatus.dismissed) {
                               return;
                             }
@@ -192,14 +260,14 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
                               return;
                             }
 
-                            widget.vm.changeActionMode(ActionMode.capture);
+                            widget.changeActionMode(ActionMode.capture);
                           },
                           child: const Text("Export")),
                       FilledButton(
                           style: FilledButton.styleFrom(
                               backgroundColor: Colors.redAccent),
                           onPressed: () async {
-                            final count = await widget.vm.deleteResources();
+                            final count = await widget.deleteResources();
                             if (count == 0) return;
 
                             if (!context.mounted) return;
@@ -209,13 +277,13 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
                               ),
                             );
 
-                            widget.vm.changeActionMode(ActionMode.capture);
+                            widget.changeActionMode(ActionMode.capture);
                             pagingCtrl.refresh();
                           },
                           child: const Text("Delete")),
                       OutlinedButton(
                           onPressed: () =>
-                              widget.vm.changeActionMode(ActionMode.capture),
+                              widget.changeActionMode(ActionMode.capture),
                           child: const Text("Cancel")),
                     ]
                 }
