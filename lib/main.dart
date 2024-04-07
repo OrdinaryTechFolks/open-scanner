@@ -4,7 +4,7 @@ import 'package:open_scanner/pkg/sqlite_client.dart';
 import 'package:open_scanner/repo/opencv.dart';
 import 'package:open_scanner/repo/resource.dart';
 import 'package:open_scanner/screen/resources_create_edit.dart';
-import 'package:open_scanner/screen/resources_create_select.dart';
+import 'package:open_scanner/screen/resources_create_crop.dart';
 import 'package:open_scanner/screen/resources_list.dart';
 import 'package:open_scanner/screen/resources_create_capture.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
@@ -33,8 +33,8 @@ Future<void> main() async {
           switch(settings.name) {
             case "/resources/list": return ResourcesListScreen(resourceRepo);
             case "/resources/create/capture": return ResourcesCreateCaptureScreen(cropToolRepo);
-            case "/resources/create/select": return ResourcesCreateSelectScreen(cropToolRepo, resourceRepo);
-            case "/resources/create/{id#int}/edit": 
+            case "/resources/create/create": return ResourcesCreateCropScreen(cropToolRepo, resourceRepo);
+            case "/resources/create/edit": 
               return ResourcesCreateEditScreen(arguments["id"] as int, cropToolRepo, openCVRepo, resourceRepo);
           }
           return const SizedBox.shrink();

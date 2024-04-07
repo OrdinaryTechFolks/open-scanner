@@ -4,7 +4,7 @@ import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:open_scanner/repo/resource.dart';
 import 'package:flutter/material.dart';
 
-class ResourcesCreateSelectScreen extends StatefulWidget {
+class ResourcesCreateCropScreen extends StatefulWidget {
   final CropToolRepo cropToolRepo;
   final ResourceRepo resourceRepo;
 
@@ -19,18 +19,18 @@ class ResourcesCreateSelectScreen extends StatefulWidget {
     return cropToolRepo.image;
   }
 
-  ResourcesCreateSelectScreen(this.cropToolRepo, this.resourceRepo, {super.key}){
+  ResourcesCreateCropScreen(this.cropToolRepo, this.resourceRepo, {super.key}){
     resetCropTool();
   }
 
   @override
-  ResourcesCreateSelectScreenState createState() =>
-      ResourcesCreateSelectScreenState();
+  ResourcesCreateCropScreenState createState() =>
+      ResourcesCreateCropScreenState();
 }
 
 // A widget that displays the picture taken by the user.
-class ResourcesCreateSelectScreenState
-    extends State<ResourcesCreateSelectScreen> {
+class ResourcesCreateCropScreenState
+    extends State<ResourcesCreateCropScreen> {
   late final image = widget.getSelectedImage(); 
 
   @override
