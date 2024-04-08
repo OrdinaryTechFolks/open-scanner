@@ -28,14 +28,14 @@ Future<void> main() async {
       home: ResourcesListScreen(resourceRepo),
       onGenerateRoute: (settings) {
         return MaterialPageRoute(builder: (context) {
-          final arguments = settings.arguments as Map<String, Object>? ?? {};
+          // final arguments = settings.arguments as Map<String, Object>? ?? {};
         
           switch(settings.name) {
             case "/resources/list": return ResourcesListScreen(resourceRepo);
             case "/resources/create/capture": return ResourcesCreateCaptureScreen(cropToolRepo);
-            case "/resources/create/create": return ResourcesCreateCropScreen(cropToolRepo, resourceRepo);
+            case "/resources/create/crop": return ResourcesCreateCropScreen(cropToolRepo, resourceRepo);
             case "/resources/create/edit": 
-              return ResourcesCreateEditScreen(arguments["id"] as int, cropToolRepo, openCVRepo, resourceRepo);
+              return ResourcesCreateEditScreen(cropToolRepo, openCVRepo, resourceRepo);
           }
           return const SizedBox.shrink();
         }, settings: settings);

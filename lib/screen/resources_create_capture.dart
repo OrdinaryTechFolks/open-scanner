@@ -89,7 +89,7 @@ class ResourcesCreateCaptureScreenState
           floatingActionButton: FloatingActionButton(
             onPressed: () async {
               widget.cropToolRepo.reset();
-
+              
               final file = await widget.takePicture(cameraController);
               final setRes = await widget.setSelectedImage(file);
 
@@ -100,7 +100,8 @@ class ResourcesCreateCaptureScreenState
                 return;
               }
 
-              await Navigator.of(context).pushNamed("/resources/create/select");
+              widget.cropToolRepo.addTool(const Offset(300, 300));
+              await Navigator.of(context).pushNamed("/resources/create/crop");
             },
             child: const Icon(Icons.camera_alt),
           ),

@@ -9,46 +9,14 @@ import 'package:share_plus/share_plus.dart';
 class ResourceRepo {
   final Config config;
   final SQLiteClient openScannerDB;
-  List<ResourceDomain> entities = [];
 
   ResourceRepo(this.config, this.openScannerDB);
 
-  void resetResources() {
-    entities = [];
-  }
-
-  void addResource() {
-    entities.add(ResourceDomain());
-  }
-
-  void resetResource(int index) {
-    entities[index] = ResourceDomain();
-  }
-
-  void setResourceImage(int index, Uint8List image) {
-    final entity = entities[index];
-    if (entity.image != null) {
-      return;
-    }
-
-    entities[index].image = image;
-  }
-
-  ResourceDomain getResource(int index) {
-    return entities[index];
-  }
-
-  void setResourceName(int index, String name) {
-    entities[index].name = name;
-  }
-
-  Future<void> saveResources() async {
-    for (var entity in entities) {
-      await openScannerDB.execute(
-        "INSERT INTO resources(name, image_path, image_data) VALUES (?, '', ?)",
-        arguments: [entity.name, entity.image!],
-      );
-    }
+  Future<void> saveResources(ResourceDomain resource) async {
+    await openScannerDB.execute(
+      "INSERT INTO resources(name, image_path, image_data) VALUES (?, '', ?)",
+      arguments: [resource.name, resource.image!],
+    );
   }
 
   Future<(List<ResourceDomain>, int)> loadResources(
@@ -107,8 +75,10 @@ class ResourceRepo {
 
   Future<int> deleteResources(List<int> ids) async {
     final placeholders = ids.map((_) => "?").join(", ");
-    await openScannerDB
-        .execute("DELETE FROM resources WHERE id IN ($placeholders)", arguments: ids);
+    await openScannerDB.execute(
+      "DELETE FROM resources WHERE id IN ($placeholders)",
+      arguments: ids,
+    );
 
     return ids.length;
   }

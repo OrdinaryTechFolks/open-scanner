@@ -8,20 +8,12 @@ class ResourcesCreateCropScreen extends StatefulWidget {
   final CropToolRepo cropToolRepo;
   final ResourceRepo resourceRepo;
 
-  void resetCropTool() {
-    resourceRepo.resetResources();
-    
-    cropToolRepo.addTool(const Offset(300, 300));
-    resourceRepo.addResource();
-  }
-
   ImageDomain getSelectedImage() {
     return cropToolRepo.image;
   }
 
-  ResourcesCreateCropScreen(this.cropToolRepo, this.resourceRepo, {super.key}){
-    resetCropTool();
-  }
+  const ResourcesCreateCropScreen(this.cropToolRepo, this.resourceRepo,
+      {super.key});
 
   @override
   ResourcesCreateCropScreenState createState() =>
@@ -29,9 +21,8 @@ class ResourcesCreateCropScreen extends StatefulWidget {
 }
 
 // A widget that displays the picture taken by the user.
-class ResourcesCreateCropScreenState
-    extends State<ResourcesCreateCropScreen> {
-  late final image = widget.getSelectedImage(); 
+class ResourcesCreateCropScreenState extends State<ResourcesCreateCropScreen> {
+  late final image = widget.getSelectedImage();
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +61,10 @@ class ResourcesCreateCropScreenState
                   );
                 }),
             // Container(width: 100, height: 100, color: Colors.red),
-            SizedBox(width: image.size.width, height: image.size.height, child: CropTool(widget.cropToolRepo))
+            SizedBox(
+                width: image.size.width,
+                height: image.size.height,
+                child: CropTool(widget.cropToolRepo))
           ],
         ),
       ),
@@ -82,9 +76,8 @@ class ResourcesCreateCropScreenState
               children: [
                 IconButton(
                     onPressed: () async {
-                      await Navigator.of(context).pushNamed(
-                          "/resources/create/{id#int}/edit",
-                          arguments: {"id": 0});
+                      await Navigator.of(context)
+                          .pushNamed("/resources/create/edit");
                     },
                     icon: const Icon(Icons.forward))
               ],

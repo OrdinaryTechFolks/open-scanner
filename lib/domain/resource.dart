@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-class ResourceDomain {
+final class ResourceDomain {
   int id = 0;
   String name = "";
   DateTime createdAt = DateTime(0);

@@ -1,44 +1,39 @@
 import 'dart:typed_data';
 import 'package:either_dart/either.dart';
+import 'package:open_scanner/domain/resource.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:open_scanner/repo/opencv.dart';
 import 'package:open_scanner/repo/resource.dart';
 import 'package:flutter/material.dart';
 
 class ResourcesCreateEditScreen extends StatefulWidget {
-  final int index;
   final CropToolRepo cropToolRepo;
   final OpenCVRepo openCVRepo;
   final ResourceRepo resourceRepo;
 
-  Future<Either<Error, Uint8List>> getTransformedImage() async {
-    final resource = resourceRepo.getResource(index);
-    if (resource.image != null) return Right(resource.image!);
+  final ResourceDomain resource = ResourceDomain();
 
+  Future<Either<Error, Uint8List>> getTransformedImage() async {
     final corners = cropToolRepo.tool.getCorners();
     final destImage = openCVRepo.transform(cropToolRepo.image, corners);
 
     final encodeRes = await destImage.getEncodedList();
     if (encodeRes.isLeft) return Left(encodeRes.left);
 
-    resourceRepo.setResourceImage(index, encodeRes.right);
+    resource.image = encodeRes.right;
     return Right(encodeRes.right);
   }
 
-  String getResourceName() {
-    return resourceRepo.getResource(index).name;
-  }
-
   void setResourceName(String name) {
-    resourceRepo.setResourceName(index, name);
+    resource.name = name;
   }
 
   Future<void> saveResources() async {
-    await resourceRepo.saveResources();
+    await resourceRepo.saveResources(resource);
   }
 
-  const ResourcesCreateEditScreen(
-      this.index, this.cropToolRepo, this.openCVRepo, this.resourceRepo,
+  ResourcesCreateEditScreen(
+      this.cropToolRepo, this.openCVRepo, this.resourceRepo,
       {super.key});
 
   @override
@@ -48,20 +43,6 @@ class ResourcesCreateEditScreen extends StatefulWidget {
 
 // A widget that displays the picture taken by the user.
 class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
-  final TextEditingController nameFieldCtrl = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    nameFieldCtrl.text = widget.getResourceName();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    nameFieldCtrl.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,7 +75,6 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
                   ),
                 ),
                 TextField(
-                  controller: nameFieldCtrl,
                   onChanged: (value) => widget.setResourceName(value),
                   decoration: const InputDecoration(
                     label: Text("Name"),
@@ -114,6 +94,8 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
                 IconButton(
                   onPressed: () async {
                     await widget.saveResources();
+                    widget.cropToolRepo.reset();
+
                     if (!context.mounted) return;
                     Navigator.of(context).popUntil(ModalRoute.withName("/"));
                     await Navigator.of(context).pushReplacementNamed("/");
