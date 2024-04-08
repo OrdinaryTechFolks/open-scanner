@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:either_dart/either.dart';
 import 'package:flutter/foundation.dart';
+import 'package:open_scanner/pkg/navigator.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:open_scanner/repo/opencv.dart';
 import 'package:open_scanner/repo/resource.dart';
@@ -10,7 +12,6 @@ class ResourcesCreateEditScreen extends StatefulWidget {
   final CropToolRepo cropToolRepo;
   final OpenCVRepo openCVRepo;
   final ResourceRepo resourceRepo;
-
 
   Future<Either<Error, Uint8List>> getTransformedImage() async {
     final corners = cropToolRepo.tool.getCorners();
@@ -68,14 +69,6 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
                     ),
                   ),
                 ),
-                TextField(
-                  onChanged: (value) => name = value,
-                  decoration: const InputDecoration(
-                    label: Text("Name"),
-                    border: OutlineInputBorder(),
-                    hintText: 'Enter your document name',
-                  ),
-                ),
               ],
             );
           }),
@@ -86,19 +79,85 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  onPressed: () async {
-                    await widget.resourceRepo.saveResources(name, image);
-                    widget.cropToolRepo.reset();
-
-                    if (!context.mounted) return;
-                    Navigator.of(context).popUntil(ModalRoute.withName("/"));
-                    await Navigator.of(context).pushReplacementNamed("/");
-                  },
+                  onPressed: () => showSaveDialog(context),
                   icon: const Icon(Icons.save),
                 )
               ],
             )),
       ),
+    );
+  }
+
+  Future<void> showSaveDialog(BuildContext context) {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog.adaptive(
+          title: const Text("Save resource"),
+          content: TextField(
+            onChanged: (value) => name = value,
+            decoration: const InputDecoration(
+              label: Text("Name"),
+              border: OutlineInputBorder(),
+              hintText: 'Enter your document name',
+            ),
+          ),
+          actions: [
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Save'),
+              onPressed: () async {
+                await widget.resourceRepo.saveResources(name, image);
+
+                if (!context.mounted) return;
+                Navigator.of(context).pop();
+
+                return showCropAnotherDialog(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> showCropAnotherDialog(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog.adaptive(
+          content: const Text("Crop another resource?"),
+          actions: [
+            TextButton(
+              child: const Text("Yes"),
+              onPressed: () async {
+                widget.cropToolRepo.addTool(const Offset(300, 300));
+                await Navigator.of(context)
+                    .popUntilAndReplace("/resources/create/crop");
+              },
+            ),
+            TextButton(
+              child: const Text("No"),
+              onPressed: () async {
+                widget.cropToolRepo.reset();
+                await Navigator.of(context).popUntilAndReplace("/");
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
