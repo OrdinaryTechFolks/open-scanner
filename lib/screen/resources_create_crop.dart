@@ -1,4 +1,5 @@
 import 'package:open_scanner/component/crop_tool.dart';
+import 'package:open_scanner/component/crop_tool_plane_painter.dart';
 import 'package:open_scanner/domain/image.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:open_scanner/repo/resource.dart';
@@ -60,7 +61,11 @@ class ResourcesCreateCropScreenState extends State<ResourcesCreateCropScreen> {
                     ),
                   );
                 }),
-            // Container(width: 100, height: 100, color: Colors.red),
+            for (final cropTool in widget.cropToolRepo.pastTools)
+              CustomPaint(
+                painter: CropToolPlanePainter(cropTool),
+                child: Container(),
+              ),
             SizedBox(
                 width: image.size.width,
                 height: image.size.height,

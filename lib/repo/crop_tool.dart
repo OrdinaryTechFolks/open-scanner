@@ -18,7 +18,7 @@ class CropToolRepo {
   CropToolDomain get tool {
     if (selectedTool == null) throw FlutterError("SelectedTool null");
     return selectedTool!;
-  } 
+  }
 
   void reset() {
     selectedImage = null;
