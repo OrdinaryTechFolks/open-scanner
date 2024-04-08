@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:either_dart/either.dart';
-import 'package:open_scanner/domain/resource.dart';
+import 'package:flutter/foundation.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:open_scanner/repo/opencv.dart';
 import 'package:open_scanner/repo/resource.dart';
@@ -11,7 +11,6 @@ class ResourcesCreateEditScreen extends StatefulWidget {
   final OpenCVRepo openCVRepo;
   final ResourceRepo resourceRepo;
 
-  final ResourceDomain resource = ResourceDomain();
 
   Future<Either<Error, Uint8List>> getTransformedImage() async {
     final corners = cropToolRepo.tool.getCorners();
@@ -20,19 +19,10 @@ class ResourcesCreateEditScreen extends StatefulWidget {
     final encodeRes = await destImage.getEncodedList();
     if (encodeRes.isLeft) return Left(encodeRes.left);
 
-    resource.image = encodeRes.right;
     return Right(encodeRes.right);
   }
 
-  void setResourceName(String name) {
-    resource.name = name;
-  }
-
-  Future<void> saveResources() async {
-    await resourceRepo.saveResources(resource);
-  }
-
-  ResourcesCreateEditScreen(
+  const ResourcesCreateEditScreen(
       this.cropToolRepo, this.openCVRepo, this.resourceRepo,
       {super.key});
 
@@ -43,6 +33,9 @@ class ResourcesCreateEditScreen extends StatefulWidget {
 
 // A widget that displays the picture taken by the user.
 class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
+  Uint8List image = Uint8List(0);
+  String name = "";
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,6 +54,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
               return Container();
             }
 
+            image = snapshot.data!.right;
             return Column(
               mainAxisSize: MainAxisSize.max,
               children: [
@@ -69,13 +63,13 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         fit: BoxFit.contain,
-                        image: MemoryImage(snapshot.data!.right),
+                        image: MemoryImage(image),
                       ),
                     ),
                   ),
                 ),
                 TextField(
-                  onChanged: (value) => widget.setResourceName(value),
+                  onChanged: (value) => name = value,
                   decoration: const InputDecoration(
                     label: Text("Name"),
                     border: OutlineInputBorder(),
@@ -93,7 +87,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
               children: [
                 IconButton(
                   onPressed: () async {
-                    await widget.saveResources();
+                    await widget.resourceRepo.saveResources(name, image);
                     widget.cropToolRepo.reset();
 
                     if (!context.mounted) return;

@@ -1,10 +1,12 @@
 import 'dart:typed_data';
 
 final class ResourceDomain {
-  int id = 0;
-  String name = "";
-  DateTime createdAt = DateTime(0);
-  Uint8List? image;
+  final int id;
+  final String name;
+  final DateTime createdAt;
+  final Uint8List image;
   
-  ResourceDomain();
+  ResourceDomain(this.id, this.name, this.createdAt, this.image);
 }
+
+final emptyResource = ResourceDomain(0, "", DateTime(0), Uint8List(0));

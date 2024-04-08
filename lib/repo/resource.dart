@@ -12,10 +12,10 @@ class ResourceRepo {
 
   ResourceRepo(this.config, this.openScannerDB);
 
-  Future<void> saveResources(ResourceDomain resource) async {
+  Future<void> saveResources(String name, Uint8List image) async {
     await openScannerDB.execute(
       "INSERT INTO resources(name, image_path, image_data) VALUES (?, '', ?)",
-      arguments: [resource.name, resource.image!],
+      arguments: [name, image],
     );
   }
 
@@ -40,12 +40,12 @@ class ResourceRepo {
         await openScannerDB.query(qb.getQuery(), arguments: qb.getArgs());
 
     for (var result in results) {
-      final entity = ResourceDomain();
-      entity.id = result['id'] as int;
-      entity.name = result['name'] as String;
-      entity.image = result['image_data'] as Uint8List;
-      entity.createdAt = DateTime.parse(result['created_at'] as String);
-      entities.add(entity);
+      entities.add(ResourceDomain(
+        result['id'] as int,
+        result['name'] as String,
+        DateTime.parse(result['created_at'] as String),
+        result['image_data'] as Uint8List,
+      ));
     }
 
     if (entities.length <= config.paginationLimit) {
@@ -60,9 +60,7 @@ class ResourceRepo {
       List<ResourceDomain> resources) async {
     final List<XFile> files = [];
     for (var res in resources) {
-      if (res.image == null) continue;
-
-      final file = XFile.fromData(res.image!,
+      final file = XFile.fromData(res.image,
           name: res.name, mimeType: 'image/png', lastModified: res.createdAt);
       files.add(file);
     }
