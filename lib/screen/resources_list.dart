@@ -20,7 +20,7 @@ class ResourcesListScreen extends StatefulWidget {
     // TEMP_FIX for infinite scroll doesn't render separator
     // before the first element
     return (
-      pageKey == 0 ? [ResourceDomain(), ...resources] : resources,
+      pageKey == 0 ? [emptyResource, ...resources] : resources,
       nextID
     );
   }
@@ -178,7 +178,7 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
                                     decoration: BoxDecoration(
                                       image: DecorationImage(
                                         fit: BoxFit.fitWidth,
-                                        image: MemoryImage(item.image!),
+                                        image: MemoryImage(item.image),
                                       ),
                                     ),
                                   ),

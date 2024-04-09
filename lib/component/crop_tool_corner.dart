@@ -4,23 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 
 class CropToolCorner extends StatefulWidget {
-  final int index;
   final int cornerIndex;
   final CropToolRepo cropToolRepo;
 
   Point<double> getCornerPosition() {
-    return cropToolRepo.getCropToolCorner(index, cornerIndex);
+    return cropToolRepo.tool.getCorner(cornerIndex);
   }
 
   void moveCorner(Offset delta) {
-    return cropToolRepo.moveCorner(index, cornerIndex, delta);
+    return cropToolRepo.tool.moveCorner(cornerIndex, delta);
   }
 
   listenCornerChanges(VoidCallback cb) {
-    return cropToolRepo.listenCropTool(index, cb);
+    return cropToolRepo.tool.listen(cb);
   }
 
-  const CropToolCorner(this.index, this.cornerIndex, this.cropToolRepo, {super.key});
+  const CropToolCorner(this.cornerIndex, this.cropToolRepo, {super.key});
 
   @override
   CropToolCornerState createState() => CropToolCornerState();

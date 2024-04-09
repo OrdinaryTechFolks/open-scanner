@@ -1,49 +1,31 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:either_dart/either.dart';
+import 'package:flutter/foundation.dart';
+import 'package:open_scanner/pkg/navigator.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:open_scanner/repo/opencv.dart';
 import 'package:open_scanner/repo/resource.dart';
 import 'package:flutter/material.dart';
 
 class ResourcesCreateEditScreen extends StatefulWidget {
-  final int index;
   final CropToolRepo cropToolRepo;
   final OpenCVRepo openCVRepo;
   final ResourceRepo resourceRepo;
 
   Future<Either<Error, Uint8List>> getTransformedImage() async {
-    final resource = resourceRepo.getResource(index);
-    if (resource.image != null) return Right(resource.image!);
-
-    final corners = cropToolRepo.getCropToolCorners(index);
-    final destImage = openCVRepo.transform(cropToolRepo.selectedImage, corners);
+    final corners = cropToolRepo.tool.getCorners();
+    final destImage = openCVRepo.transform(cropToolRepo.image, corners);
 
     final encodeRes = await destImage.getEncodedList();
     if (encodeRes.isLeft) return Left(encodeRes.left);
 
-    resourceRepo.setResourceImage(index, encodeRes.right);
     return Right(encodeRes.right);
   }
 
-  int getNextIndex() {
-    final nextID = index + 1;
-    if (nextID >= cropToolRepo.entities.length) return -1;
-    return nextID;
-  }
-
-  String getResourceName(){
-    return resourceRepo.getResource(index).name;
-  }
-
-  void setResourceName(String name){
-    resourceRepo.setResourceName(index, name);
-  }
-
-  Future<void> saveResources() async {
-    await resourceRepo.saveResources();
-  }
-
-  const ResourcesCreateEditScreen(this.index, this.cropToolRepo, this.openCVRepo, this.resourceRepo, {super.key});
+  const ResourcesCreateEditScreen(
+      this.cropToolRepo, this.openCVRepo, this.resourceRepo,
+      {super.key});
 
   @override
   ResourcesCreateEditScreenState createState() =>
@@ -52,25 +34,13 @@ class ResourcesCreateEditScreen extends StatefulWidget {
 
 // A widget that displays the picture taken by the user.
 class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
-  final TextEditingController nameFieldCtrl = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    nameFieldCtrl.text = widget.getResourceName();
-  }
-  
-  @override
-  void dispose() {
-    super.dispose();
-    nameFieldCtrl.dispose();
-  }
+  Uint8List image = Uint8List(0);
+  String name = "";
 
   @override
   Widget build(BuildContext context) {
-    final nextID = widget.getNextIndex();
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit the resource')),
+      appBar: AppBar(title: const Text('Edit the crop')),
       body: FutureBuilder(
           future: widget.getTransformedImage(),
           builder: (context, snapshot) {
@@ -85,6 +55,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
               return Container();
             }
 
+            image = snapshot.data!.right;
             return Column(
               mainAxisSize: MainAxisSize.max,
               children: [
@@ -93,18 +64,9 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         fit: BoxFit.contain,
-                        image: MemoryImage(snapshot.data!.right),
+                        image: MemoryImage(image),
                       ),
                     ),
-                  ),
-                ),
-                TextField(
-                  controller: nameFieldCtrl,
-                  onChanged: (value) => widget.setResourceName(value),
-                  decoration: const InputDecoration(
-                    label: Text("Name"),
-                    border: OutlineInputBorder(),
-                    hintText: 'Enter your document name',
                   ),
                 ),
               ],
@@ -116,26 +78,86 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (nextID != -1)
-                  IconButton(
-                    onPressed: () async {
-                      await Navigator.of(context).pushNamed(
-                          "/resources/create/{id#int}/edit",
-                          arguments: {"id": nextID});
-                    },
-                    icon: const Icon(Icons.forward),
-                  ),
-                if (nextID == -1)
-                  IconButton(
-                      onPressed: () async {
-                        await widget.saveResources();
-                        if (!context.mounted) return;
-                        Navigator.of(context).popUntil(ModalRoute.withName("/"));
-                        await Navigator.of(context).pushReplacementNamed("/");
-                      }, icon: const Icon(Icons.save))
+                IconButton(
+                  onPressed: () => showSaveDialog(context),
+                  icon: const Icon(Icons.save),
+                )
               ],
             )),
       ),
+    );
+  }
+
+  Future<void> showSaveDialog(BuildContext context) {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog.adaptive(
+          title: const Text("Save resource"),
+          content: TextField(
+            onChanged: (value) => name = value,
+            decoration: const InputDecoration(
+              label: Text("Name"),
+              border: OutlineInputBorder(),
+              hintText: 'Enter your document name',
+            ),
+          ),
+          actions: [
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Save'),
+              onPressed: () async {
+                await widget.resourceRepo.saveResources(name, image);
+
+                if (!context.mounted) return;
+                Navigator.of(context).pop();
+
+                return showCropAnotherDialog(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> showCropAnotherDialog(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog.adaptive(
+          content: const Text("Crop another resource?"),
+          actions: [
+            TextButton(
+              child: const Text("Yes"),
+              onPressed: () async {
+                widget.cropToolRepo.addTool(const Offset(300, 300));
+                await Navigator.of(context)
+                    .popUntilAndReplace("/resources/create/crop");
+              },
+            ),
+            TextButton(
+              child: const Text("No"),
+              onPressed: () async {
+                widget.cropToolRepo.reset();
+                await Navigator.of(context).popUntilAndReplace("/");
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

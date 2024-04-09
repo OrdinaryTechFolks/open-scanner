@@ -3,24 +3,22 @@ import 'package:open_scanner/domain/crop_tool.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 
 class CropToolEdge extends StatefulWidget {
-  final int index;
   final int edgeIndex;
   final CropToolRepo cropToolRepo;
 
   EdgeTransform getEdgeTransform() {
-    return cropToolRepo.getEdgeTransform(index, edgeIndex);
+    return cropToolRepo.tool.getEdgeTransform(edgeIndex);
   }
 
   void moveEdge(Offset delta) {
-    return cropToolRepo.moveEdge(index, edgeIndex, delta);
+    return cropToolRepo.tool.moveEdge(edgeIndex, delta);
   }
 
   listenCornerChanges(VoidCallback cb) {
-    return cropToolRepo.listenCropTool(index, cb);
+    return cropToolRepo.tool.listen(cb);
   }
 
-  const CropToolEdge(this.index, this.edgeIndex, this.cropToolRepo,
-      {super.key});
+  const CropToolEdge(this.edgeIndex, this.cropToolRepo, {super.key});
 
   @override
   CropToolEdgeState createState() => CropToolEdgeState();
