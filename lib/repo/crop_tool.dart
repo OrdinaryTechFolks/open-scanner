@@ -13,7 +13,7 @@ class CropToolRepo {
   ImageDomain get image {
     if (selectedImage == null) throw FlutterError("SelectedImage null");
     return selectedImage!;
-  } 
+  }
 
   CropToolDomain get tool {
     if (selectedTool == null) throw FlutterError("SelectedTool null");
@@ -31,11 +31,14 @@ class CropToolRepo {
   }
 
   void addTool(Offset delta) {
+    final width = image.size.width * 0.3;
+    final height = image.size.height * 0.3;
+
     final List<Point<double>> corners = [
       const Point(0, 0),
-      const Point(144, 0),
-      const Point(0, 256),
-      const Point(144, 256)
+      Point(width, 0),
+      Point(0, height),
+      Point(width, height)
     ];
 
     if (selectedTool != null) {
@@ -43,7 +46,8 @@ class CropToolRepo {
     }
 
     final tool = CropToolDomain(corners, image.size);
-    tool.moveCropTool(delta);
+    tool.moveCropTool(Offset(
+        image.size.width / 2 - width / 2, image.size.height / 2 - height / 2));
 
     selectedTool = tool;
   }

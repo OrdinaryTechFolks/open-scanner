@@ -1,3 +1,4 @@
+import 'package:measure_size/measure_size.dart';
 import 'package:open_scanner/component/crop_tool.dart';
 import 'package:open_scanner/component/crop_tool_plane_painter.dart';
 import 'package:open_scanner/domain/image.dart';
@@ -24,53 +25,75 @@ class ResourcesCreateCropScreen extends StatefulWidget {
 // A widget that displays the picture taken by the user.
 class ResourcesCreateCropScreenState extends State<ResourcesCreateCropScreen> {
   late final image = widget.getSelectedImage();
+  TransformationController controller = TransformationController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Crop the image')),
-      body: InteractiveViewer(
-        constrained: false,
-        minScale: 0.01,
-        maxScale: 100,
-        boundaryMargin: const EdgeInsets.all(200),
-        child: Stack(
-          children: [
-            FutureBuilder(
-                future: image.getEncodedList(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting ||
-                      snapshot.data == null) {
-                    return const CircularProgressIndicator();
-                  }
+      body: MeasureSize(
+        onChange: (size) {
+          double scaleWidth = size.width / image.size.width;
+          double scaleHeight = size.height / image.size.height;
+          double targetScale =
+              scaleWidth < scaleHeight ? scaleWidth : scaleHeight;
 
-                  if (snapshot.data!.isLeft) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(snapshot.data!.left.toString())));
-                    return Container();
-                  }
+          controller.value = Matrix4.identity() * targetScale;
 
-                  return Container(
-                    width: image.size.width,
-                    height: image.size.height,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        fit: BoxFit.none,
-                        image: MemoryImage(snapshot.data!.right),
+          if (scaleWidth < scaleHeight) {
+            final viewHeight = size.height / targetScale;
+            final diffHeight = viewHeight - image.size.height;
+            controller.value.setTranslationRaw(0, diffHeight / 4, 0);
+          } else {
+            final viewWidth = size.width / targetScale;
+            final diffWidth = viewWidth - image.size.width;
+            controller.value.setTranslationRaw(diffWidth / 4, 0, 0);
+          }
+        },
+        child: InteractiveViewer(
+          transformationController: controller,
+          constrained: false,
+          minScale: 0.1,
+          maxScale: 10,
+          boundaryMargin: const EdgeInsets.all(80),
+          child: Stack(
+            children: [
+              FutureBuilder(
+                  future: image.getEncodedList(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting ||
+                        snapshot.data == null) {
+                      return const CircularProgressIndicator();
+                    }
+
+                    if (snapshot.data!.isLeft) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(snapshot.data!.left.toString())));
+                      return Container();
+                    }
+
+                    return Container(
+                      width: image.size.width,
+                      height: image.size.height,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          fit: BoxFit.none,
+                          image: MemoryImage(snapshot.data!.right),
+                        ),
                       ),
-                    ),
-                  );
-                }),
-            for (final cropTool in widget.cropToolRepo.pastTools)
-              CustomPaint(
-                painter: CropToolPlanePainter(cropTool),
-                child: Container(),
-              ),
-            SizedBox(
-                width: image.size.width,
-                height: image.size.height,
-                child: CropTool(widget.cropToolRepo))
-          ],
+                    );
+                  }),
+              for (final cropTool in widget.cropToolRepo.pastTools)
+                CustomPaint(
+                  painter: CropToolPlanePainter(cropTool),
+                  child: Container(),
+                ),
+              SizedBox(
+                  width: image.size.width,
+                  height: image.size.height,
+                  child: CropTool(widget.cropToolRepo))
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: BottomAppBar(
