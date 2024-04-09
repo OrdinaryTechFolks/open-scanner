@@ -40,7 +40,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit the resource')),
+      appBar: AppBar(title: const Text('Edit the crop')),
       body: FutureBuilder(
           future: widget.getTransformedImage(),
           builder: (context, snapshot) {

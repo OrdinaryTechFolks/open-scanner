@@ -30,7 +30,7 @@ class ResourcesCreateCropScreenState extends State<ResourcesCreateCropScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Crop the image')),
+      appBar: AppBar(title: const Text('Crop the picture')),
       body: MeasureSize(
         onChange: (size) {
           double scaleWidth = size.width / image.size.width;
@@ -100,14 +100,14 @@ class ResourcesCreateCropScreenState extends State<ResourcesCreateCropScreen> {
         child: SizedBox(
             height: 50,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                IconButton(
-                    onPressed: () async {
-                      await Navigator.of(context)
-                          .pushNamed("/resources/create/edit");
-                    },
-                    icon: const Icon(Icons.forward))
+                OutlinedButton(
+                  onPressed: () => {
+                    Navigator.of(context).pushNamed("/resources/create/edit")
+                  },
+                  child: const Text("Crop"),
+                ),
               ],
             )),
       ),
