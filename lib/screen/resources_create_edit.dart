@@ -1,17 +1,22 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:either_dart/either.dart';
 import 'package:flutter/foundation.dart';
+import 'package:open_scanner/domain/ratio.dart';
 import 'package:open_scanner/pkg/navigator.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:open_scanner/repo/opencv.dart';
+import 'package:open_scanner/repo/ratio.dart';
 import 'package:open_scanner/repo/resource.dart';
 import 'package:flutter/material.dart';
+
+const originalRatioID = -1;
+const customRatioID = -2;
 
 class ResourcesCreateEditScreen extends StatefulWidget {
   final CropToolRepo cropToolRepo;
   final OpenCVRepo openCVRepo;
   final ResourceRepo resourceRepo;
+  final RatioRepo ratioRepo;
 
   Future<Either<Error, Uint8List>> getTransformedImage() async {
     final corners = cropToolRepo.tool.getCorners();
@@ -24,7 +29,7 @@ class ResourcesCreateEditScreen extends StatefulWidget {
   }
 
   const ResourcesCreateEditScreen(
-      this.cropToolRepo, this.openCVRepo, this.resourceRepo,
+      this.cropToolRepo, this.openCVRepo, this.resourceRepo, this.ratioRepo,
       {super.key});
 
   @override
@@ -32,10 +37,21 @@ class ResourcesCreateEditScreen extends StatefulWidget {
       ResourcesCreateEditScreenState();
 }
 
+enum SubMenu {
+  aspectRatio,
+  size,
+}
+
 // A widget that displays the picture taken by the user.
 class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
   Uint8List image = Uint8List(0);
   String name = "";
+
+  final ValueNotifier<SubMenu?> subMenuNotifier = ValueNotifier(null);
+
+  void setSubMenuNotifier(SubMenu subMenu) {
+    subMenuNotifier.value = subMenuNotifier.value == subMenu ? null : subMenu;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,18 +88,97 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
               ],
             );
           }),
-      bottomNavigationBar: BottomAppBar(
-        child: SizedBox(
-            height: 50,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+      bottomNavigationBar: ValueListenableBuilder(
+        valueListenable: subMenuNotifier,
+        builder: (context, subMenu, child) {
+          return BottomAppBar(
+            height: subMenu != null ? 136 : 72,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  onPressed: () => showSaveDialog(context),
-                  icon: const Icon(Icons.save),
-                )
+                if (subMenu != null)
+                  switch (subMenu) {
+                    SubMenu.aspectRatio => FutureBuilder(
+                        future: widget.ratioRepo.listRatios(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+
+                          return SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                for (final ratio in snapshot.data!)
+                                  Container(
+                                    margin: const EdgeInsets.only(right: 8),
+                                    child: OutlinedButton(
+                                      onPressed: () {},
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Text(ratio.name,
+                                              style:
+                                                  const TextStyle(fontSize: 8)),
+                                          Text(ratio.toString(),
+                                              style: const TextStyle(
+                                                  fontSize: 12)),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    SubMenu.size => const Text("Size"),
+                  },
+                if (subMenu != null) const Divider(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () {
+                        setSubMenuNotifier(SubMenu.aspectRatio);
+                      },
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text("Aspect Ratio", style: TextStyle(fontSize: 8)),
+                          Text("Original", style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    FilledButton(
+                      onPressed: () => showSaveDialog(context),
+                      child: const Text("Save"),
+                    ),
+                    OutlinedButton(
+                      onPressed: () {
+                        setSubMenuNotifier(SubMenu.size);
+                      },
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text("Size", style: TextStyle(fontSize: 8)),
+                          Text("200x300", style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ],
-            )),
+            ),
+          );
+        },
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:open_scanner/config/config.dart';
 import 'package:open_scanner/open_scanner_db_migrations.dart';
 import 'package:open_scanner/pkg/sqlite_client.dart';
 import 'package:open_scanner/repo/opencv.dart';
+import 'package:open_scanner/repo/ratio.dart';
 import 'package:open_scanner/repo/resource.dart';
 import 'package:open_scanner/screen/resources_create_edit.dart';
 import 'package:open_scanner/screen/resources_create_crop.dart';
@@ -21,6 +22,7 @@ Future<void> main() async {
   final openCVRepo = OpenCVRepo();
   final cropToolRepo = CropToolRepo();
   final resourceRepo = ResourceRepo(config, openScannerDB);
+  final ratioRepo = RatioRepo();
 
   runApp(MaterialApp(
       title: 'Open Scanner',
@@ -35,7 +37,7 @@ Future<void> main() async {
             case "/resources/create/capture": return ResourcesCreateCaptureScreen(cropToolRepo);
             case "/resources/create/crop": return ResourcesCreateCropScreen(cropToolRepo, resourceRepo);
             case "/resources/create/edit": 
-              return ResourcesCreateEditScreen(cropToolRepo, openCVRepo, resourceRepo);
+              return ResourcesCreateEditScreen(cropToolRepo, openCVRepo, resourceRepo, ratioRepo);
           }
           return const SizedBox.shrink();
         }, settings: settings);
