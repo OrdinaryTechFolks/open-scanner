@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:either_dart/either.dart';
 import 'package:flutter/foundation.dart';
-import 'package:open_scanner/domain/ratio.dart';
+import 'package:open_scanner/hook/use_future.dart';
 import 'package:open_scanner/pkg/navigator.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:open_scanner/repo/opencv.dart';
@@ -12,13 +12,29 @@ import 'package:flutter/material.dart';
 const originalRatioID = -1;
 const customRatioID = -2;
 
-class ResourcesCreateEditScreen extends StatefulWidget {
+enum SubMenu {
+  aspectRatio,
+  size,
+}
+
+// A widget that displays the picture taken by the user.
+class ResourcesCreateEditScreen extends StatelessWidget {
   final CropToolRepo cropToolRepo;
   final OpenCVRepo openCVRepo;
   final ResourceRepo resourceRepo;
   final RatioRepo ratioRepo;
 
-  Future<Either<Error, Uint8List>> getTransformedImage() async {
+  late final futureGTI = UseFuture(getTransformedImage);
+  final ValueNotifier<String> name = ValueNotifier("");
+  final ValueNotifier<SubMenu?> subMenuNotifier = ValueNotifier(null);
+
+  ResourcesCreateEditScreen(
+      this.cropToolRepo, this.openCVRepo, this.resourceRepo, this.ratioRepo,
+      {super.key}) {
+    futureGTI.execute(null);
+  }
+
+  Future<Either<Error, Uint8List>> getTransformedImage(void _) async {
     final corners = cropToolRepo.tool.getCorners();
     final destImage = openCVRepo.transform(cropToolRepo.image, corners);
 
@@ -28,27 +44,6 @@ class ResourcesCreateEditScreen extends StatefulWidget {
     return Right(encodeRes.right);
   }
 
-  const ResourcesCreateEditScreen(
-      this.cropToolRepo, this.openCVRepo, this.resourceRepo, this.ratioRepo,
-      {super.key});
-
-  @override
-  ResourcesCreateEditScreenState createState() =>
-      ResourcesCreateEditScreenState();
-}
-
-enum SubMenu {
-  aspectRatio,
-  size,
-}
-
-// A widget that displays the picture taken by the user.
-class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
-  Uint8List image = Uint8List(0);
-  String name = "";
-
-  final ValueNotifier<SubMenu?> subMenuNotifier = ValueNotifier(null);
-
   void setSubMenuNotifier(SubMenu subMenu) {
     subMenuNotifier.value = subMenuNotifier.value == subMenu ? null : subMenu;
   }
@@ -57,37 +52,36 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Edit the crop')),
-      body: FutureBuilder(
-          future: widget.getTransformedImage(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting ||
-                snapshot.data == null) {
-              return const CircularProgressIndicator();
-            }
+      body: ValueListenableBuilder(
+        valueListenable: futureGTI.snapshot,
+        builder: (context, snapshot, child) {
+          if (snapshot.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          
+          if (snapshot.error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(snapshot.error!.toString())));
+            return const SizedBox.shrink();
+          }
 
-            if (snapshot.data!.isLeft) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(snapshot.data!.left.toString())));
-              return Container();
-            }
-
-            image = snapshot.data!.right;
-            return Column(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        fit: BoxFit.contain,
-                        image: MemoryImage(image),
-                      ),
+          return Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      fit: BoxFit.contain,
+                      image: MemoryImage(snapshot.result),
                     ),
                   ),
                 ),
-              ],
-            );
-          }),
+              ),
+            ],
+          );
+        },
+      ),
       bottomNavigationBar: ValueListenableBuilder(
         valueListenable: subMenuNotifier,
         builder: (context, subMenu, child) {
@@ -99,7 +93,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
                 if (subMenu != null)
                   switch (subMenu) {
                     SubMenu.aspectRatio => FutureBuilder(
-                        future: widget.ratioRepo.listRatios(),
+                        future: ratioRepo.listRatios(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
@@ -191,7 +185,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
         return AlertDialog.adaptive(
           title: const Text("Save resource"),
           content: TextField(
-            onChanged: (value) => name = value,
+            onChanged: (value) => name.value = value,
             decoration: const InputDecoration(
               label: Text("Name"),
               border: OutlineInputBorder(),
@@ -214,7 +208,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
               ),
               child: const Text('Save'),
               onPressed: () async {
-                await widget.resourceRepo.saveResources(name, image);
+                await resourceRepo.saveResources(name.value, futureGTI.snapshot.value.result);
 
                 if (!context.mounted) return;
                 Navigator.of(context).pop();
@@ -238,7 +232,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
             TextButton(
               child: const Text("Yes"),
               onPressed: () async {
-                widget.cropToolRepo.addTool(const Offset(300, 300));
+                cropToolRepo.addTool(const Offset(300, 300));
                 await Navigator.of(context)
                     .popUntilAndReplace("/resources/create/crop");
               },
@@ -246,7 +240,7 @@ class ResourcesCreateEditScreenState extends State<ResourcesCreateEditScreen> {
             TextButton(
               child: const Text("No"),
               onPressed: () async {
-                widget.cropToolRepo.reset();
+                cropToolRepo.reset();
                 await Navigator.of(context).popUntilAndReplace("/");
               },
             ),
