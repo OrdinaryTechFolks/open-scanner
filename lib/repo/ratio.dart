@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:either_dart/either.dart';
 import 'package:flutter/material.dart';
 import 'package:open_scanner/domain/ratio.dart';
 
@@ -10,8 +11,8 @@ class RatioRepo {
 
   RatioRepo();
 
-  Future<List<RatioDomain>> listRatios() async {
-    return ratios;
+  Future<Either<Error, List<RatioDomain>>> listRatios() async {
+    return Right(ratios);
   }
 
   void add(String name, Size size) async {

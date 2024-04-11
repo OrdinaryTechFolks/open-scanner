@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:either_dart/either.dart';
 import 'package:flutter/foundation.dart';
+import 'package:open_scanner/domain/ratio.dart';
 import 'package:open_scanner/hook/use_future.dart';
 import 'package:open_scanner/pkg/navigator.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
@@ -25,6 +26,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
   final RatioRepo ratioRepo;
 
   late final futureGTI = UseFuture(getTransformedImage);
+  late final futureLR = UseFuture((void _) async => await ratioRepo.listRatios());
   final ValueNotifier<String> name = ValueNotifier("");
   final ValueNotifier<SubMenu?> subMenuNotifier = ValueNotifier(null);
 
@@ -32,6 +34,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
       this.cropToolRepo, this.openCVRepo, this.resourceRepo, this.ratioRepo,
       {super.key}) {
     futureGTI.execute(null);
+    futureLR.execute(null);
   }
 
   Future<Either<Error, Uint8List>> getTransformedImage(void _) async {
@@ -58,7 +61,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
           if (snapshot.loading) {
             return const Center(child: CircularProgressIndicator());
           }
-          
+
           if (snapshot.error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(snapshot.error!.toString())));
@@ -90,89 +93,91 @@ class ResourcesCreateEditScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (subMenu != null)
-                  switch (subMenu) {
-                    SubMenu.aspectRatio => FutureBuilder(
-                        future: ratioRepo.listRatios(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          }
-
-                          return SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                for (final ratio in snapshot.data!)
-                                  Container(
-                                    margin: const EdgeInsets.only(right: 8),
-                                    child: OutlinedButton(
-                                      onPressed: () {},
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          Text(ratio.name,
-                                              style:
-                                                  const TextStyle(fontSize: 8)),
-                                          Text(ratio.toString(),
-                                              style: const TextStyle(
-                                                  fontSize: 12)),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    SubMenu.size => const Text("Size"),
-                  },
+                if (subMenu != null) getSubMenuWidget(subMenu),
                 if (subMenu != null) const Divider(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () {
-                        setSubMenuNotifier(SubMenu.aspectRatio);
-                      },
-                      child: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text("Aspect Ratio", style: TextStyle(fontSize: 8)),
-                          Text("Original", style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                    FilledButton(
-                      onPressed: () => showSaveDialog(context),
-                      child: const Text("Save"),
-                    ),
-                    OutlinedButton(
-                      onPressed: () {
-                        setSubMenuNotifier(SubMenu.size);
-                      },
-                      child: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text("Size", style: TextStyle(fontSize: 8)),
-                          Text("200x300", style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                getMenuWidget(context),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  Row getMenuWidget(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        OutlinedButton(
+          onPressed: () {
+            setSubMenuNotifier(SubMenu.aspectRatio);
+          },
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text("Aspect Ratio", style: TextStyle(fontSize: 8)),
+              Text("Original", style: TextStyle(fontSize: 12)),
+            ],
+          ),
+        ),
+        FilledButton(
+          onPressed: () => showSaveDialog(context),
+          child: const Text("Save"),
+        ),
+        OutlinedButton(
+          onPressed: () {
+            setSubMenuNotifier(SubMenu.size);
+          },
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text("Size", style: TextStyle(fontSize: 8)),
+              Text("200x300", style: TextStyle(fontSize: 12)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget getSubMenuWidget(SubMenu subMenu) {
+    return switch (subMenu) {
+      SubMenu.aspectRatio => ValueListenableBuilder(
+          valueListenable: futureLR.snapshot,
+          builder: (context, snapshot, child) {
+            if (snapshot.loading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final ratio in snapshot.result) getRatioItemWidget(ratio)
+                ],
+              ),
+            );
+          },
+        ),
+      SubMenu.size => const Text("Size"),
+    };
+  }
+
+  Container getRatioItemWidget(RatioDomain ratio) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      child: OutlinedButton(
+        onPressed: () {},
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(ratio.name, style: const TextStyle(fontSize: 8)),
+            Text(ratio.toString(), style: const TextStyle(fontSize: 12)),
+          ],
+        ),
       ),
     );
   }
@@ -208,7 +213,8 @@ class ResourcesCreateEditScreen extends StatelessWidget {
               ),
               child: const Text('Save'),
               onPressed: () async {
-                await resourceRepo.saveResources(name.value, futureGTI.snapshot.value.result);
+                await resourceRepo.saveResources(
+                    name.value, futureGTI.snapshot.value.result);
 
                 if (!context.mounted) return;
                 Navigator.of(context).pop();
