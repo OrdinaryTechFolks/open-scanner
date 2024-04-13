@@ -16,11 +16,7 @@ class RatioRepo {
   }
 
   void add(String name, Size size) async {
-    final axis = size.width > size.height ? Axis.horizontal : Axis.vertical;
-    final ratio = size.width > size.height
-        ? size.width / size.height
-        : size.height / size.width;
-
+    final (axis, ratio) = RatioDomain.getAxisAndRatio(size);
     ratios.add(
       RatioDomain(ratios.length, name, axis, ratio),
     );

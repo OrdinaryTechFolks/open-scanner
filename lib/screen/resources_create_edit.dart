@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:either_dart/either.dart';
-import 'package:flutter/foundation.dart';
+import 'package:open_scanner/domain/image.dart';
 import 'package:open_scanner/domain/ratio.dart';
 import 'package:open_scanner/hook/use_future.dart';
 import 'package:open_scanner/pkg/navigator.dart';
@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 
 const originalRatioID = -1;
 const customRatioID = -2;
+const forcedRatioID = -3;
 
 enum SubMenu {
   aspectRatio,
@@ -26,25 +27,55 @@ class ResourcesCreateEditScreen extends StatelessWidget {
   final RatioRepo ratioRepo;
 
   late final futureGTI = UseFuture(getTransformedImage);
-  late final futureLR = UseFuture((void _) async => await ratioRepo.listRatios());
+  late final futureLR =
+      UseFuture((void _) async => await ratioRepo.listRatios());
   final ValueNotifier<String> name = ValueNotifier("");
   final ValueNotifier<SubMenu?> subMenuNotifier = ValueNotifier(null);
+
+  late final RatioDomain originalRatio;
+  late final ValueNotifier<RatioDomain> customRatio;
+  late final RatioDomain forcedRatio;
+
+  late final ValueNotifier<RatioDomain> selectedRatio;
+
+  late final ValueNotifier<Size> inputtedSize;
 
   ResourcesCreateEditScreen(
       this.cropToolRepo, this.openCVRepo, this.resourceRepo, this.ratioRepo,
       {super.key}) {
-    futureGTI.execute(null);
-    futureLR.execute(null);
+    initAsync();
   }
 
-  Future<Either<Error, Uint8List>> getTransformedImage(void _) async {
+  initAsync() async {
+    await futureGTI.execute(null);
+    await futureLR.execute(null);
+
+    final encodedImage = futureGTI.snapshot.value.result;
+    final (axis, ratio) = RatioDomain.getAxisAndRatio(encodedImage.size);
+    originalRatio = RatioDomain(originalRatioID, "Original", axis, ratio);
+    customRatio = ValueNotifier(RatioDomain(customRatioID, "Custom", axis, ratio));
+    forcedRatio = RatioDomain(forcedRatioID, "Forced", Axis.horizontal, 0);
+
+    selectedRatio = ValueNotifier(originalRatio);
+    inputtedSize = ValueNotifier(encodedImage.size);
+
+    selectedRatio.addListener(() {
+      if (selectedRatio.value.id == forcedRatioID) return;
+      inputtedSize.value = selectedRatio.value.getSize(encodedImage.size);
+    });
+
+    inputtedSize.addListener(() async {
+      await futureGTI.execute(inputtedSize.value);
+    });
+  }
+
+  Future<Either<Error, EncodedImageDomain>> getTransformedImage(
+      Size? preferredSize) async {
+
     final corners = cropToolRepo.tool.getCorners();
-    final destImage = openCVRepo.transform(cropToolRepo.image, corners);
+    final destImage = openCVRepo.transform(cropToolRepo.image, corners, preferredSize);
 
-    final encodeRes = await destImage.getEncodedList();
-    if (encodeRes.isLeft) return Left(encodeRes.left);
-
-    return Right(encodeRes.right);
+    return getEncodedImageDomain(destImage);
   }
 
   void setSubMenuNotifier(SubMenu subMenu) {
@@ -76,7 +107,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     image: DecorationImage(
                       fit: BoxFit.contain,
-                      image: MemoryImage(snapshot.result),
+                      image: MemoryImage(snapshot.result.data),
                     ),
                   ),
                 ),
@@ -110,6 +141,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
       children: [
         OutlinedButton(
           onPressed: () {
+            // TODO: show toast and disable when ratio is forced
             setSubMenuNotifier(SubMenu.aspectRatio);
           },
           child: const Column(
@@ -155,7 +187,9 @@ class ResourcesCreateEditScreen extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  for (final ratio in snapshot.result) getRatioItemWidget(ratio)
+                  getRatioItemWidget(originalRatio),
+                  for (final ratio in snapshot.result) getRatioItemWidget(ratio),
+                  getRatioItemWidget(customRatio.value),
                 ],
               ),
             );
@@ -169,7 +203,10 @@ class ResourcesCreateEditScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(right: 8),
       child: OutlinedButton(
-        onPressed: () {},
+        onPressed: () {
+          // TODO: show custom ratio popup
+          selectedRatio.value = ratio;
+        },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -214,7 +251,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
               child: const Text('Save'),
               onPressed: () async {
                 await resourceRepo.saveResources(
-                    name.value, futureGTI.snapshot.value.result);
+                    name.value, futureGTI.snapshot.value.result.data);
 
                 if (!context.mounted) return;
                 Navigator.of(context).pop();
