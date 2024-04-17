@@ -3,16 +3,13 @@ import 'package:either_dart/either.dart';
 import 'package:open_scanner/domain/image.dart';
 import 'package:open_scanner/domain/ratio.dart';
 import 'package:open_scanner/hook/use_future.dart';
+import 'package:open_scanner/pkg/error.dart';
 import 'package:open_scanner/pkg/navigator.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:open_scanner/repo/opencv.dart';
 import 'package:open_scanner/repo/ratio.dart';
 import 'package:open_scanner/repo/resource.dart';
 import 'package:flutter/material.dart';
-
-const originalRatioID = -1;
-const customRatioID = -2;
-const forcedRatioID = -3;
 
 enum SubMenu {
   aspectRatio,
@@ -36,7 +33,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
   late final ValueNotifier<RatioDomain> customRatio;
   late final RatioDomain forcedRatio;
 
-  late final ValueNotifier<RatioDomain> selectedRatio;
+  late final ValueNotifier<int> selectedRatio;
 
   late final ValueNotifier<Size> inputtedSize;
 
@@ -52,16 +49,20 @@ class ResourcesCreateEditScreen extends StatelessWidget {
 
     final encodedImage = futureGTI.snapshot.value.result;
     final (axis, ratio) = RatioDomain.getAxisAndRatio(encodedImage.size);
-    originalRatio = RatioDomain(originalRatioID, "Original", axis, ratio);
-    customRatio = ValueNotifier(RatioDomain(customRatioID, "Custom", axis, ratio));
-    forcedRatio = RatioDomain(forcedRatioID, "Forced", Axis.horizontal, 0);
+    originalRatio = RatioDomain.getOriginal(axis, ratio);
+    customRatio = ValueNotifier(RatioDomain.getCustom(axis, ratio));
+    forcedRatio = RatioDomain.getForced();
 
-    selectedRatio = ValueNotifier(originalRatio);
+    selectedRatio = ValueNotifier(originalRatio.id);
     inputtedSize = ValueNotifier(encodedImage.size);
 
-    selectedRatio.addListener(() {
-      if (selectedRatio.value.id == forcedRatioID) return;
-      inputtedSize.value = selectedRatio.value.getSize(encodedImage.size);
+    selectedRatio.addListener(() async {
+      if (selectedRatio.value == forcedRatioID) return;
+
+      final getRes = await getRatio(selectedRatio.value);
+      if (getRes.isLeft) return ErrorPackage.showSnackBar(getRes.left);
+
+      inputtedSize.value = getRes.right.getSize(encodedImage.size);
     });
 
     inputtedSize.addListener(() async {
@@ -69,11 +70,18 @@ class ResourcesCreateEditScreen extends StatelessWidget {
     });
   }
 
+  Future<Either<Error, RatioDomain>> getRatio(int ratioID)async{
+    if (ratioID == originalRatioID) return Right(originalRatio);
+    if (ratioID == customRatioID) return Right(customRatio.value);
+
+    return ratioRepo.get(ratioID);
+  }
+
   Future<Either<Error, EncodedImageDomain>> getTransformedImage(
       Size? preferredSize) async {
-
     final corners = cropToolRepo.tool.getCorners();
-    final destImage = openCVRepo.transform(cropToolRepo.image, corners, preferredSize);
+    final destImage =
+        openCVRepo.transform(cropToolRepo.image, corners, preferredSize);
 
     return getEncodedImageDomain(destImage);
   }
@@ -187,9 +195,14 @@ class ResourcesCreateEditScreen extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  getRatioItemWidget(originalRatio),
-                  for (final ratio in snapshot.result) getRatioItemWidget(ratio),
-                  getRatioItemWidget(customRatio.value),
+                  getRatioItemWidget(context, originalRatio),
+                  for (final ratio in snapshot.result)
+                    getRatioItemWidget(context, ratio),
+                  ValueListenableBuilder(
+                    valueListenable: customRatio,
+                    builder: (context, value, child) =>
+                        getRatioItemWidget(context, value),
+                  ),
                 ],
               ),
             );
@@ -199,13 +212,19 @@ class ResourcesCreateEditScreen extends StatelessWidget {
     };
   }
 
-  Container getRatioItemWidget(RatioDomain ratio) {
+  Container getRatioItemWidget(BuildContext context, RatioDomain ratio) {
     return Container(
       margin: const EdgeInsets.only(right: 8),
       child: OutlinedButton(
-        onPressed: () {
-          // TODO: show custom ratio popup
-          selectedRatio.value = ratio;
+        onPressed: () async {
+          if (ratio.id == customRatioID) {
+            final selectedRatioID = await showCustomRatioBottomSheet(context);
+            if (selectedRatioID != null) {
+              selectedRatio.value = selectedRatioID;
+            }
+            return;
+          }
+          selectedRatio.value = ratio.id;
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -217,6 +236,135 @@ class ResourcesCreateEditScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<int?> showCustomRatioBottomSheet(BuildContext context) async {
+    final isSaveNotifier = ValueNotifier(false);
+
+    final widthTextCtrl = TextEditingController(
+        text: customRatio.value.toSize().width.toStringAsFixed(2));
+    final heightTextCtrl = TextEditingController(
+        text: customRatio.value.toSize().height.toStringAsFixed(2));
+    var name = "";
+
+    return showModalBottomSheet<int>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) {
+          return ValueListenableBuilder(
+            valueListenable: isSaveNotifier,
+            builder: (context, isSave, child) {
+              return Container(
+                padding: EdgeInsets.only(
+                    top: 16,
+                    left: 16,
+                    right: 16,
+                    bottom: 16 + MediaQuery.of(context).viewInsets.bottom),
+                child: Wrap(
+                  direction: Axis.horizontal,
+                  crossAxisAlignment: WrapCrossAlignment.start,
+                  runSpacing: 12,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        'Custom Ratio',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    TextField(
+                      onChanged: (value) {},
+                      controller: widthTextCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        label: Text("Width"),
+                        border: OutlineInputBorder(),
+                        hintText: 'Enter a width',
+                      ),
+                    ),
+                    TextField(
+                      onChanged: (value) {},
+                      controller: heightTextCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        label: Text("Column"),
+                        border: OutlineInputBorder(),
+                        hintText: 'Enter a column',
+                      ),
+                    ),
+                    SwitchListTile(
+                      title: const Text("Save the ratio?"),
+                      secondary: const Icon(Icons.save),
+                      value: isSave,
+                      onChanged: (value) {
+                        isSaveNotifier.value = value;
+                      },
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(
+                            color: Theme.of(context).dividerColor, width: 1),
+                        borderRadius: const OutlineInputBorder().borderRadius,
+                      ),
+                    ),
+                    if (isSaveNotifier.value) ...[
+                      TextField(
+                        onChanged: (value) {
+                          name = value;
+                        },
+                        decoration: const InputDecoration(
+                          label: Text("Name"),
+                          border: OutlineInputBorder(),
+                          hintText: 'Enter a ratio name',
+                        ),
+                      ),
+                    ],
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: FilledButton(
+                        style: TextButton.styleFrom(
+                          textStyle: Theme.of(context).textTheme.labelLarge,
+                        ),
+                        child: isSaveNotifier.value
+                            ? const Text("Save and Apply")
+                            : const Text("Apply"),
+                        onPressed: () async {
+                          if (isSaveNotifier.value) {
+                            final addRes = await ratioRepo.add(
+                              name,
+                              Size(
+                                double.parse(widthTextCtrl.text),
+                                double.parse(heightTextCtrl.text),
+                              ),
+                            );
+
+                            if (addRes.isLeft) {
+                              return ErrorPackage.showSnackBar(addRes.left);
+                            }
+
+                            await futureLR.execute(null);
+
+                            if (!context.mounted) return;
+                            Navigator.of(context).pop(addRes.right);
+                          } else {
+                            final (axis, ratio) = RatioDomain.getAxisAndRatio(
+                              Size(
+                                double.parse(widthTextCtrl.text),
+                                double.parse(heightTextCtrl.text),
+                              ),
+                            );
+
+                            customRatio.value =
+                                RatioDomain.getCustom(axis, ratio);
+                            Navigator.of(context).pop(customRatioID);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        });
   }
 
   Future<void> showSaveDialog(BuildContext context) {

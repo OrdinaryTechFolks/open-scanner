@@ -11,6 +11,8 @@ import 'package:open_scanner/screen/resources_create_capture.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:flutter/material.dart';
 
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -28,6 +30,7 @@ Future<void> main() async {
       title: 'Open Scanner',
       theme: ThemeData.dark(useMaterial3: true),
       home: ResourcesListScreen(resourceRepo),
+      scaffoldMessengerKey: scaffoldMessengerKey,
       onGenerateRoute: (settings) {
         return MaterialPageRoute(builder: (context) {
           // final arguments = settings.arguments as Map<String, Object>? ?? {};
