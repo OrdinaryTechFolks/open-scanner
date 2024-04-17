@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:either_dart/either.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +10,8 @@ const forcedRatioID = -3;
 
 class RatioRepo {
   final codedRatios = {
-    -101: RatioDomain(-101, "ISO A", Axis.vertical, sqrt(2)),
-    -102: RatioDomain(-102, "I-ISO A", Axis.horizontal, sqrt(2)),
+    -101: RatioDomain(-101, "ISO A", Size(1, sqrt(2))),
+    -102: RatioDomain(-102, "I-ISO A", Size(sqrt(2), 1)),
   };
 
   RatioRepo();
@@ -26,9 +27,8 @@ class RatioRepo {
   }
 
   Future<Either<Error, int>> add(String name, Size size) async {
-    final (axis, ratio) = RatioDomain.getAxisAndRatio(size);
     final id = codedRatios.length + 1;
-    codedRatios[id] = (RatioDomain(id, name, axis, ratio));
+    codedRatios[id] = (RatioDomain(id, name, size));
 
     return Right(id);
   }
@@ -38,15 +38,15 @@ class RatioRepo {
     return null;
   }
 
-  RatioDomain getOriginal(Axis axis, double ratio) {
-    return RatioDomain(originalRatioID, "Original", axis, ratio);
+  RatioDomain getOriginal(Size size) {
+    return RatioDomain(originalRatioID, "Original", size);
   }
 
-  RatioDomain getCustom(Axis axis, double ratio) {
-    return RatioDomain(customRatioID, "Custom", axis, ratio);
+  RatioDomain getCustom(Size size) {
+    return RatioDomain(customRatioID, "Custom", size);
   }
 
   RatioDomain getForced() {
-    return RatioDomain(forcedRatioID, "Forced", Axis.horizontal, 0);
+    return RatioDomain(forcedRatioID, "Forced", Size.zero);
   }
 }

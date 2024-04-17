@@ -4,6 +4,7 @@ import 'package:open_scanner/domain/image.dart';
 import 'package:open_scanner/domain/ratio.dart';
 import 'package:open_scanner/hook/use_future.dart';
 import 'package:open_scanner/pkg/error.dart';
+import 'package:open_scanner/pkg/format.dart';
 import 'package:open_scanner/pkg/navigator.dart';
 import 'package:open_scanner/repo/crop_tool.dart';
 import 'package:open_scanner/repo/opencv.dart';
@@ -48,9 +49,8 @@ class ResourcesCreateEditScreen extends StatelessWidget {
     await futureLR.execute(null);
 
     final encodedImage = futureGTI.snapshot.value.result;
-    final (axis, ratio) = RatioDomain.getAxisAndRatio(encodedImage.size);
-    originalRatio = ratioRepo.getOriginal(axis, ratio);
-    customRatio = ValueNotifier(ratioRepo.getCustom(axis, ratio));
+    originalRatio = ratioRepo.getOriginal(encodedImage.size);
+    customRatio = ValueNotifier(ratioRepo.getCustom(encodedImage.size));
     forcedRatio = ratioRepo.getForced();
 
     selectedRatio = ValueNotifier(originalRatio.id);
@@ -62,7 +62,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
       final getRes = await getRatio(selectedRatio.value);
       if (getRes.isLeft) return ErrorPackage.showSnackBar(getRes.left);
 
-      inputtedSize.value = getRes.right.getSize(encodedImage.size);
+      inputtedSize.value = getRes.right.transform(encodedImage.size);
     });
 
     inputtedSize.addListener(() async {
@@ -287,9 +287,9 @@ class ResourcesCreateEditScreen extends StatelessWidget {
     final isSaveNotifier = ValueNotifier(false);
 
     final widthTextCtrl = TextEditingController(
-        text: customRatio.value.toSize().width.toStringAsFixed(2));
+        text: customRatio.value.size.width.toStringAsFixedOpt(2));
     final heightTextCtrl = TextEditingController(
-        text: customRatio.value.toSize().height.toStringAsFixed(2));
+        text: customRatio.value.size.height.toStringAsFixedOpt(2));
     var name = "";
 
     return showModalBottomSheet<int>(
@@ -322,9 +322,9 @@ class ResourcesCreateEditScreen extends StatelessWidget {
                       controller: widthTextCtrl,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        label: Text("Width"),
+                        label: Text("Horizontal"),
                         border: OutlineInputBorder(),
-                        hintText: 'Enter a width',
+                        hintText: 'Enter a number',
                       ),
                     ),
                     TextField(
@@ -332,9 +332,9 @@ class ResourcesCreateEditScreen extends StatelessWidget {
                       controller: heightTextCtrl,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        label: Text("Column"),
+                        label: Text("Vertical"),
                         border: OutlineInputBorder(),
-                        hintText: 'Enter a column',
+                        hintText: 'Enter a number',
                       ),
                     ),
                     SwitchListTile(
@@ -390,15 +390,12 @@ class ResourcesCreateEditScreen extends StatelessWidget {
                             if (!context.mounted) return;
                             Navigator.of(context).pop(addRes.right);
                           } else {
-                            final (axis, ratio) = RatioDomain.getAxisAndRatio(
+                            customRatio.value = ratioRepo.getCustom(
                               Size(
                                 double.parse(widthTextCtrl.text),
                                 double.parse(heightTextCtrl.text),
                               ),
                             );
-
-                            customRatio.value =
-                                ratioRepo.getCustom(axis, ratio);
                             Navigator.of(context).pop(customRatioID);
                           }
                         },
