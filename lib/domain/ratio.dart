@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 
-const originalRatioID = -1;
-const customRatioID = -2;
-const forcedRatioID = -3;
-
 class RatioDomain {
   final int id;
   final String name;
@@ -44,17 +40,5 @@ class RatioDomain {
   String toString() {
     final ratioString = ratio.toStringAsFixed(2);
     return axis == Axis.horizontal ? "$ratioString : 1" : "1 : $ratioString";
-  }
-
-  static RatioDomain getOriginal(Axis axis, double ratio) {
-    return RatioDomain(originalRatioID, "Original", axis, ratio);
-  }
-
-  static RatioDomain getCustom(Axis axis, double ratio) {
-    return RatioDomain(customRatioID, "Custom", axis, ratio);
-  }
-
-  static RatioDomain getForced() {
-    return RatioDomain(forcedRatioID, "Forced", Axis.horizontal, 0);
   }
 }

@@ -49,9 +49,9 @@ class ResourcesCreateEditScreen extends StatelessWidget {
 
     final encodedImage = futureGTI.snapshot.value.result;
     final (axis, ratio) = RatioDomain.getAxisAndRatio(encodedImage.size);
-    originalRatio = RatioDomain.getOriginal(axis, ratio);
-    customRatio = ValueNotifier(RatioDomain.getCustom(axis, ratio));
-    forcedRatio = RatioDomain.getForced();
+    originalRatio = ratioRepo.getOriginal(axis, ratio);
+    customRatio = ValueNotifier(ratioRepo.getCustom(axis, ratio));
+    forcedRatio = ratioRepo.getForced();
 
     selectedRatio = ValueNotifier(originalRatio.id);
     inputtedSize = ValueNotifier(encodedImage.size);
@@ -70,7 +70,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
     });
   }
 
-  Future<Either<Error, RatioDomain>> getRatio(int ratioID)async{
+  Future<Either<Error, RatioDomain>> getRatio(int ratioID) async {
     if (ratioID == originalRatioID) return Right(originalRatio);
     if (ratioID == customRatioID) return Right(customRatio.value);
 
@@ -216,6 +216,14 @@ class ResourcesCreateEditScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(right: 8),
       child: OutlinedButton(
+        onLongPress: () {
+          if (ratio.id <= 0) {
+            return ErrorPackage.showSnackBar(
+              FlutterError("Only saved custom ratio can be deleted"),
+            );
+          }
+          getDeleteSavedRatioDialog(context, ratio);
+        },
         onPressed: () async {
           if (ratio.id == customRatioID) {
             final selectedRatioID = await showCustomRatioBottomSheet(context);
@@ -235,6 +243,43 @@ class ResourcesCreateEditScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Future<dynamic> getDeleteSavedRatioDialog(
+      BuildContext context, RatioDomain ratio) {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog.adaptive(
+          title: const Text("Delete Ratio"),
+          content: Text("Are you sure you want to delete ${ratio.name}?"),
+          actions: [
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text("No"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Yes'),
+              onPressed: () async {
+                await ratioRepo.delete(ratio.id);
+                await futureLR.execute(null);
+
+                if (!context.mounted) return;
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -353,7 +398,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
                             );
 
                             customRatio.value =
-                                RatioDomain.getCustom(axis, ratio);
+                                ratioRepo.getCustom(axis, ratio);
                             Navigator.of(context).pop(customRatioID);
                           }
                         },
