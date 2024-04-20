@@ -18,13 +18,13 @@ Future<void> main() async {
 
   final config = Config();
 
-  final openScannerDB = SQLiteClient("open_scanner.db", 2, openScannerDBMigrations);
+  final openScannerDB = SQLiteClient("open_scanner.db", 3, openScannerDBMigrations);
   await openScannerDB.initDatabase();
 
   final openCVRepo = OpenCVRepo();
   final cropToolRepo = CropToolRepo();
   final resourceRepo = ResourceRepo(config, openScannerDB);
-  final ratioRepo = RatioRepo();
+  final ratioRepo = RatioRepo(openScannerDB);
 
   runApp(MaterialApp(
       title: 'Open Scanner',

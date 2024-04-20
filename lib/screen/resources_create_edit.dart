@@ -272,6 +272,9 @@ class ResourcesCreateEditScreen extends StatelessWidget {
               onPressed: () async {
                 await ratioRepo.delete(ratio.id);
                 await futureLR.execute(null);
+                if (ratio.id == selectedRatio.value) {
+                  selectedRatio.value = originalRatioID;
+                }
 
                 if (!context.mounted) return;
                 Navigator.of(context).pop();
