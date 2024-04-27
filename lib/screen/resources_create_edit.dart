@@ -34,9 +34,9 @@ class ResourcesCreateEditScreen extends StatelessWidget {
   late final ValueNotifier<RatioDomain> customRatio;
   late final RatioDomain forcedRatio;
 
-  late final ValueNotifier<int> selectedRatio;
-
-  late final ValueNotifier<Size> inputtedSize;
+  late final ValueNotifier<RatioDomain> selectedRatio =
+      ValueNotifier(ratioRepo.getOriginal(Size.zero));
+  late final ValueNotifier<Size> inputtedSize = ValueNotifier(Size.zero);
 
   ResourcesCreateEditScreen(
       this.cropToolRepo, this.openCVRepo, this.resourceRepo, this.ratioRepo,
@@ -53,16 +53,11 @@ class ResourcesCreateEditScreen extends StatelessWidget {
     customRatio = ValueNotifier(ratioRepo.getCustom(encodedImage.size));
     forcedRatio = ratioRepo.getForced();
 
-    selectedRatio = ValueNotifier(originalRatio.id);
-    inputtedSize = ValueNotifier(encodedImage.size);
+    inputtedSize.value = encodedImage.size;
 
     selectedRatio.addListener(() async {
-      if (selectedRatio.value == forcedRatioID) return;
-
-      final getRes = await getRatio(selectedRatio.value);
-      if (getRes.isLeft) return ErrorPackage.showSnackBar(getRes.left);
-
-      inputtedSize.value = getRes.right.transform(encodedImage.size);
+      if (selectedRatio.value.id == forcedRatioID) return;
+      inputtedSize.value = selectedRatio.value.transform(encodedImage.size);
     });
 
     inputtedSize.addListener(() async {
@@ -125,18 +120,27 @@ class ResourcesCreateEditScreen extends StatelessWidget {
         },
       ),
       bottomNavigationBar: ValueListenableBuilder(
-        valueListenable: subMenuNotifier,
-        builder: (context, subMenu, child) {
-          return BottomAppBar(
-            height: subMenu != null ? 136 : 72,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (subMenu != null) getSubMenuWidget(subMenu),
-                if (subMenu != null) const Divider(),
-                getMenuWidget(context),
-              ],
-            ),
+        valueListenable: futureGTI.snapshot,
+        builder: (context, value, child) {
+          if (value.loading) {
+            return const SizedBox.shrink();
+          }
+
+          return ValueListenableBuilder(
+            valueListenable: subMenuNotifier,
+            builder: (context, subMenu, child) {
+              return BottomAppBar(
+                height: subMenu != null ? 136 : 72,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (subMenu != null) getSubMenuWidget(subMenu),
+                    if (subMenu != null) const Divider(),
+                    getMenuWidget(context),
+                  ],
+                ),
+              );
+            },
           );
         },
       ),
@@ -152,12 +156,16 @@ class ResourcesCreateEditScreen extends StatelessWidget {
             // TODO: show toast and disable when ratio is forced
             setSubMenuNotifier(SubMenu.aspectRatio);
           },
-          child: const Column(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text("Aspect Ratio", style: TextStyle(fontSize: 8)),
-              Text("Original", style: TextStyle(fontSize: 12)),
+              const Text("Aspect Ratio", style: TextStyle(fontSize: 8)),
+              ValueListenableBuilder(
+                valueListenable: selectedRatio,
+                builder: (context, value, child) =>
+                    Text(value.name, style: const TextStyle(fontSize: 12)),
+              ),
             ],
           ),
         ),
@@ -169,12 +177,16 @@ class ResourcesCreateEditScreen extends StatelessWidget {
           onPressed: () {
             setSubMenuNotifier(SubMenu.size);
           },
-          child: const Column(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text("Size", style: TextStyle(fontSize: 8)),
-              Text("200x300", style: TextStyle(fontSize: 12)),
+              const Text("Size", style: TextStyle(fontSize: 8)),
+              ValueListenableBuilder(
+                valueListenable: inputtedSize,
+                builder: (context, value, child) => Text(value.toStringUI(),
+                    style: const TextStyle(fontSize: 12)),
+              ),
             ],
           ),
         ),
@@ -226,13 +238,14 @@ class ResourcesCreateEditScreen extends StatelessWidget {
         },
         onPressed: () async {
           if (ratio.id == customRatioID) {
-            final selectedRatioID = await showCustomRatioBottomSheet(context);
-            if (selectedRatioID != null) {
-              selectedRatio.value = selectedRatioID;
+            final selectedCustomRatio =
+                await showCustomRatioBottomSheet(context);
+            if (selectedCustomRatio != null) {
+              selectedRatio.value = selectedCustomRatio;
             }
             return;
           }
-          selectedRatio.value = ratio.id;
+          selectedRatio.value = ratio;
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -272,8 +285,8 @@ class ResourcesCreateEditScreen extends StatelessWidget {
               onPressed: () async {
                 await ratioRepo.delete(ratio.id);
                 await futureLR.execute(null);
-                if (ratio.id == selectedRatio.value) {
-                  selectedRatio.value = originalRatioID;
+                if (ratio == selectedRatio.value) {
+                  selectedRatio.value = originalRatio;
                 }
 
                 if (!context.mounted) return;
@@ -286,7 +299,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
     );
   }
 
-  Future<int?> showCustomRatioBottomSheet(BuildContext context) async {
+  Future<RatioDomain?> showCustomRatioBottomSheet(BuildContext context) async {
     final isSaveNotifier = ValueNotifier(false);
 
     final widthTextCtrl = TextEditingController(
@@ -295,7 +308,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
         text: customRatio.value.size.height.toStringAsFixedOpt(2));
     var name = "";
 
-    return showModalBottomSheet<int>(
+    return showModalBottomSheet<RatioDomain>(
         context: context,
         isScrollControlled: true,
         builder: (context) {
@@ -399,7 +412,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
                                 double.parse(heightTextCtrl.text),
                               ),
                             );
-                            Navigator.of(context).pop(customRatioID);
+                            Navigator.of(context).pop(customRatio.value);
                           }
                         },
                       ),

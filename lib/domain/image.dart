@@ -52,3 +52,9 @@ Future<Either<Error, EncodedImageDomain>> getEncodedImageDomain(ImageDomain imag
 
   return Right(EncodedImageDomain(image.size, encodedData.right));
 }
+
+extension SizeExts on Size {
+  String toStringUI() {
+    return "${width.toStringAsFixed(0)} X ${height.toStringAsFixed(0)}";
+  }
+}

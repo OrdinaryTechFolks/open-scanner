@@ -64,14 +64,16 @@ class RatioRepo {
     return Right(convertDBToDomain(queryRes.right[0]));
   }
 
-  Future<Either<Error, int>> add(String name, Size size) async {
+  Future<Either<Error, RatioDomain>> add(String name, Size size) async {
     final queryRes = await safeCatchFuture(() => openScannerDB.query(
           "INSERT INTO ratios(name, horizontal, vertical) VALUES (?, ?, ?) RETURNING id",
           arguments: [name, size.width, size.height],
         ));
     if (queryRes.isLeft) return Left(FlutterError(queryRes.left.toString()));
 
-    return Right(queryRes.right[0]['id'] as int);
+    return Right(
+      RatioDomain(queryRes.right[0]['id'] as int, name, size),
+    );
   }
 
   Future<Error?> delete(int id) async {
@@ -80,7 +82,7 @@ class RatioRepo {
           arguments: [id],
         ));
     if (execRes.isLeft) return FlutterError(execRes.left.toString());
-  
+
     return null;
   }
 
