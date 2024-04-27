@@ -46,5 +46,18 @@ final Map<int, Migration> openScannerDBMigrations = {
     '''
       ALTER TABLE resources DROP COLUMN image_data;
     '''
-  )
+  ),
+  3: (
+    (_) async => '''
+      CREATE TABLE IF NOT EXISTS ratios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        horizontal REAL NOT NULL,
+        vertical REAL NOT NULL
+      )
+    ''',
+    '''
+      DROP TABLE IF EXISTS ratios;
+    '''
+  ),
 };

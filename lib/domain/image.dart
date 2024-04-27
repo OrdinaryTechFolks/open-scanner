@@ -36,3 +36,25 @@ class ImageDomain {
     return Right(data.buffer.asUint8List()); 
   }
 }
+
+class EncodedImageDomain {
+  final ui.Size size;
+  final Uint8List data;
+
+  EncodedImageDomain(this.size, this.data);
+}
+
+Future<Either<Error, EncodedImageDomain>> getEncodedImageDomain(ImageDomain image) async {
+  final encodedData = await image.getEncodedList();
+  if (encodedData.isLeft) {
+    return Left(encodedData.left);
+  }
+
+  return Right(EncodedImageDomain(image.size, encodedData.right));
+}
+
+extension SizeExts on Size {
+  String toStringUI() {
+    return "${width.toStringAsFixed(0)} X ${height.toStringAsFixed(0)}";
+  }
+}
