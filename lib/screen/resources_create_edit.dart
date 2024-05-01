@@ -76,7 +76,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
       Size? preferredSize) async {
     final corners = cropToolRepo.tool.getCorners();
     final destImage =
-        openCVRepo.transform(cropToolRepo.image, corners, preferredSize);
+        await openCVRepo.transform(cropToolRepo.image, corners, preferredSize);
 
     return getEncodedImageDomain(destImage);
   }
