@@ -1,0 +1,5 @@
+version: v1
+plugins:
+  - plugin: dart
+    out: lib/api
+    opt: grpc

@@ -1,3 +1,5 @@
+import 'package:grpc/grpc_web.dart';
+import 'package:open_scanner/api/open-scanner-be/v1/opencv.pbgrpc.dart';
 import 'package:open_scanner/config/config.dart';
 import 'package:open_scanner/open_scanner_db_migrations.dart';
 import 'package:open_scanner/pkg/sqlite_client.dart';
@@ -18,10 +20,13 @@ Future<void> main() async {
 
   final config = Config();
 
+  final openCVChannel = GrpcWebClientChannel.xhr(Uri.parse(config.resources.backend.address));
+  final openCVClient = OpenCVServiceClient(openCVChannel);
+
   final openScannerDB = SQLiteClient("open_scanner.db", 3, openScannerDBMigrations);
   await openScannerDB.initDatabase();
-
-  final openCVRepo = OpenCVRepo();
+  
+  final openCVRepo = OpenCVRepo(openCVClient);
   final cropToolRepo = CropToolRepo();
   final resourceRepo = ResourceRepo(config, openScannerDB);
   final ratioRepo = RatioRepo(openScannerDB);

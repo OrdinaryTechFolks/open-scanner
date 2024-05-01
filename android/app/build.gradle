@@ -71,21 +71,6 @@ android {
            signingConfig signingConfigs.release
        }
    }
-
-    externalNativeBuild {
-        cmake {
-            path "CMakeLists.txt"
-        }
-    }
-
-    defaultConfig {
-        externalNativeBuild {
-            cmake {
-                cppFlags '-frtti -fexceptions -std=c++17'
-                arguments "-DANDROID_STL=c++_shared"
-            }
-        }
-    }
 }
 
 flutter {
