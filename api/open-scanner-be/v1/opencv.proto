@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package v1;
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "gitlab.com/huseinnashr/open-scanner-be/api/open-scanner-be/v1;v1";
+
+service OpenCVService {
+  rpc WarpPerspective(WarpPerspectiveRequest) returns (Image) {
+    option (google.api.http) = {
+      post: "/opencv:WarpPerspective",
+      body: "*",
+    };
+  }
+}
+
+message Image {
+  int32 width = 1;
+  int32 height = 2;
+  int32 channels = 3;
+  bytes data = 4;
+};
+
+message Point2f {
+  float x = 1;
+  float y = 2;
+}
+
+message Size2f {
+  float width = 1;
+  float height = 2;
+}
+
+message WarpPerspectiveRequest {
+  Image srcImage = 1;
+  repeated Point2f srcCorners = 2;
+  Size2f destSize = 3;
+}

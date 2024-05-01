@@ -1,0 +1,4 @@
+version: v1
+modules: 
+  - repository: https://github.com/OrdinaryTechFolks/open-scanner-be.git
+    path: api/open-scanner-be/v1
