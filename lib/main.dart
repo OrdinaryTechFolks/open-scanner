@@ -20,7 +20,7 @@ Future<void> main() async {
 
   final config = Config();
 
-  final openCVChannel = GrpcWebClientChannel.xhr(Uri.parse("http://localhost:8080"));
+  final openCVChannel = GrpcWebClientChannel.xhr(Uri.parse(config.resources.backend.address));
   final openCVClient = OpenCVServiceClient(openCVChannel);
 
   final openScannerDB = SQLiteClient("open_scanner.db", 3, openScannerDBMigrations);
