@@ -430,7 +430,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog.adaptive(
+        return AlertDialog(
           title: const Text("Save resource"),
           content: TextField(
             onChanged: (value) => name.value = value,
