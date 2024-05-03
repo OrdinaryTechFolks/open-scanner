@@ -1,10 +1,12 @@
 import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
 import 'package:open_scanner/config/config.dart';
 import 'package:open_scanner/domain/resource.dart';
 import 'package:open_scanner/pkg/query_builder.dart';
+import 'package:open_scanner/pkg/safe_catch.dart';
 import 'package:open_scanner/pkg/sqlite_client.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:file_saver/file_saver.dart';
 
 class ResourceRepo {
   final Config config;
@@ -56,19 +58,21 @@ class ResourceRepo {
     return (entities, nextEntity.id);
   }
 
-  Future<ShareResultStatus> exportResources(
-      List<ResourceDomain> resources) async {
-    final List<XFile> files = [];
+  Future<Error?> downloadAll(List<ResourceDomain> resources) async {
     for (var res in resources) {
-      final file = XFile.fromData(res.image,
-          name: res.name, mimeType: 'image/png', lastModified: res.createdAt);
-      files.add(file);
+      final saveRes = await safeCatchFuture(() => FileSaver.instance.saveFile(
+        name: "${res.name}_${res.createdAt.millisecondsSinceEpoch}",
+        bytes: res.image,
+        ext: "png",
+        mimeType: MimeType.png,
+      ));
+      
+      if (saveRes.isLeft) {
+        return FlutterError(saveRes.left.toString());
+      }
     }
 
-    if (files.isEmpty) return ShareResultStatus.dismissed;
-
-    final shareRes = await Share.shareXFiles(files);
-    return shareRes.status;
+    return null;
   }
 
   Future<int> deleteResources(List<int> ids) async {
