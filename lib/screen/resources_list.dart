@@ -3,7 +3,6 @@ import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:intl/intl.dart';
 import 'package:open_scanner/domain/resource.dart';
 import 'package:open_scanner/repo/resource.dart';
-import 'package:share_plus/share_plus.dart';
 
 enum ActionMode { capture, select }
 
@@ -59,13 +58,13 @@ class ResourcesListScreen extends StatefulWidget {
     actionMode.value = mode;
   }
 
-  Future<ShareResultStatus> exportResources() async {
+  Future<Error?> downloadAll() async {
     final resources = selectedResources.values
         .map((e) => e.value)
         .whereType<ResourceDomain>()
         .toList();
 
-    return resourceRepo.exportResources(resources);
+    return resourceRepo.downloadAll(resources);
   }
 
   Future<int> deleteResources() async {
@@ -245,16 +244,12 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
                   ActionMode.select => [
                       FilledButton(
                           onPressed: () async {
-                            final status = await widget.exportResources();
-                            if (status == ShareResultStatus.dismissed) {
-                              return;
-                            }
-
-                            if (status == ShareResultStatus.unavailable) {
+                            final downloadErr = await widget.downloadAll();
+                            if (downloadErr != null) {
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Share unavailable :("),
+                                SnackBar(
+                                  content: Text(downloadErr.toString()),
                                 ),
                               );
                               return;
@@ -262,7 +257,7 @@ class ResourcesListScreenState extends State<ResourcesListScreen> {
 
                             widget.changeActionMode(ActionMode.capture);
                           },
-                          child: const Text("Export")),
+                          child: const Text("Download")),
                       FilledButton(
                           style: FilledButton.styleFrom(
                               backgroundColor: Colors.redAccent),
