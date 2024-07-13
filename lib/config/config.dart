@@ -5,7 +5,7 @@ class Config {
 }
 
 class Resource {
-  final backend = API("http://localhost:8080", 10); 
+  final backend = API("https://scanme-backend-http-feat-5-dev", 10); 
 }
 
 class API {
