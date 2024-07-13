@@ -60,6 +60,23 @@ class ResourcesCreateCaptureScreenState
   late Future<CameraController> getCameraController =
       widget.getCameraController();
 
+  Future<void> capture(BuildContext ctx, CameraController ctrl) async {
+    widget.cropToolRepo.reset();
+
+    final file = await widget.takePicture(ctrl);
+    final setRes = await widget.setSelectedImage(file);
+
+    if (!ctx.mounted) return;
+    if (setRes != null) {
+      ScaffoldMessenger.of(ctx)
+          .showSnackBar(SnackBar(content: Text(setRes.toString())));
+      return;
+    }
+
+    widget.cropToolRepo.addTool(const Offset(300, 300));
+    await Navigator.of(ctx).pushNamed("/resources/create/crop");
+  }
+  
   @override
   void dispose() async {
     super.dispose();
@@ -79,31 +96,22 @@ class ResourcesCreateCaptureScreenState
 
         final cameraController = snapshot.data!;
         return Scaffold(
-          appBar: AppBar(title: const Text('Take a picture')),
+          appBar: AppBar(
+            title: const Text('Take a picture'),
+            actions: [
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                child: IconButton(
+                    onPressed: () async => capture(context, cameraController),
+                    icon: const Icon(Icons.camera_alt)),
+              )
+            ],
+          ),
           body: Center(
             child: AspectRatio(
               aspectRatio: cameraController.value.aspectRatio,
               child: CameraPreview(cameraController),
             ),
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () async {
-              widget.cropToolRepo.reset();
-              
-              final file = await widget.takePicture(cameraController);
-              final setRes = await widget.setSelectedImage(file);
-
-              if (!context.mounted) return;
-              if (setRes != null) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(setRes.toString())));
-                return;
-              }
-
-              widget.cropToolRepo.addTool(const Offset(300, 300));
-              await Navigator.of(context).pushNamed("/resources/create/crop");
-            },
-            child: const Icon(Icons.camera_alt),
           ),
         );
       },

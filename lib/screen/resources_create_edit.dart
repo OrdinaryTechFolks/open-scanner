@@ -88,7 +88,18 @@ class ResourcesCreateEditScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit the crop')),
+      appBar: AppBar(
+        title: const Text('Edit the crop'),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              onPressed: () => showSaveDialog(context),
+              icon: const Icon(Icons.save),
+            ),
+          ),
+        ],
+      ),
       body: ValueListenableBuilder(
         valueListenable: futureGTI.snapshot,
         builder: (context, snapshot, child) {
@@ -132,7 +143,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
               return BottomAppBar(
                 height: subMenu != null ? 136 : 72,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     if (subMenu != null) getSubMenuWidget(subMenu),
                     if (subMenu != null) const Divider(),
@@ -150,6 +161,7 @@ class ResourcesCreateEditScreen extends StatelessWidget {
   Row getMenuWidget(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         OutlinedButton(
           onPressed: () {
@@ -168,10 +180,6 @@ class ResourcesCreateEditScreen extends StatelessWidget {
               ),
             ],
           ),
-        ),
-        FilledButton(
-          onPressed: () => showSaveDialog(context),
-          child: const Text("Save"),
         ),
         OutlinedButton(
           onPressed: () {

@@ -50,5 +50,6 @@ Future<void> main() async {
           return const SizedBox.shrink();
         }, settings: settings);
       },
+      debugShowCheckedModeBanner: false
     ));
 }
